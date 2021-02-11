@@ -8,6 +8,10 @@ import java.util.Set;
 
 @Entity
 @Table(name = "post_comments")
+@NamedQueries({
+        @NamedQuery(name = "PostComment.findAll", query = "SELECT b FROM PostComment b")
+        , @NamedQuery(name = "PostComment.findById", query = "SELECT b FROM PostComment b WHERE b.id = :id")
+})
 public class PostComment implements Serializable {
 
     @Id

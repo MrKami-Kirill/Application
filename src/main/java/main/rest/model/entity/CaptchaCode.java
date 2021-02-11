@@ -7,6 +7,10 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "captcha_codes")
+@NamedQueries({
+        @NamedQuery(name = "CaptchaCode.findAll", query = "SELECT b FROM CaptchaCode b")
+        , @NamedQuery(name = "CaptchaCode.findById", query = "SELECT b FROM CaptchaCode b WHERE b.id = :id")
+})
 public class CaptchaCode implements Serializable {
 
     @Id

@@ -13,7 +13,6 @@ import java.util.Set;
 @NamedQueries({
         @NamedQuery(name = "Post.findAll", query = "SELECT b FROM Post b")
         , @NamedQuery(name = "Post.findById", query = "SELECT b FROM Post b WHERE b.id = :id")
-        , @NamedQuery(name = "Post.findActivePostById", query = "SELECT b FROM Post b WHERE b.id = :id AND b.isActive = true")
 })
 public class Post implements Serializable {
     @Id

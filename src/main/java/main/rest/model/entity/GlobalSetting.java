@@ -6,6 +6,12 @@ import java.io.Serializable;
 
 @Entity
 @Table(name = "global_settings")
+@NamedQueries({
+        @NamedQuery(name = "GlobalSetting.findAll", query = "SELECT b FROM GlobalSetting b")
+        , @NamedQuery(name = "GlobalSetting.findById", query = "SELECT b FROM GlobalSetting b WHERE b.id = :id")
+        , @NamedQuery(name = "GlobalSetting.findByCode", query = "SELECT b FROM GlobalSetting b WHERE b.code = :code")
+        , @NamedQuery(name = "GlobalSetting.findByName", query = "SELECT b FROM GlobalSetting b WHERE b.name = :name")
+})
 public class GlobalSetting implements Serializable {
 
     @Id

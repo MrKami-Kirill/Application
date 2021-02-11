@@ -13,7 +13,6 @@ import java.util.Set;
         , @NamedQuery(name = "User.findById", query = "SELECT b FROM User b WHERE b.id = :id")
         , @NamedQuery(name = "User.findByName", query = "SELECT b FROM User b WHERE b.name = :name")
         , @NamedQuery(name = "User.findByEmail", query = "SELECT b FROM User b WHERE b.email = :email")
-        , @NamedQuery(name = "User.findModeratorById", query = "SELECT b FROM User b WHERE b.id = :id AND b.isModerator = true")
 })
 public class User implements Serializable {
     @Id
