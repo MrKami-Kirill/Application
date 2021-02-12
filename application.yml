@@ -15,3 +15,15 @@ spring:
       hibernate:
         jdbc:
           dialect: org.hibernate.dialect.MySQL8Dialect
+
+blog:
+  title: "DevPub"
+  subtitle: "Рассказы разработчиков"
+  phone: "+7 903 666-44-55"
+  email: "mail@mail.ru"
+  copyright: "Дмитрий Сергеев"
+  copyright_from: "2005"
+
+post:
+  announce:
+    max_length: 150
