@@ -4,6 +4,7 @@ import lombok.extern.log4j.Log4j2;
 import main.rest.api.response.Response;
 import main.rest.api.response.GetTagResponse;
 import main.rest.model.entity.Tag;
+import main.rest.model.repositories.PostRepository;
 import main.rest.model.repositories.TagRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,9 @@ public class TagService {
 
     @Autowired
     private TagRepository tagRepository;
+
+    @Autowired
+    private PostRepository postRepository;
 
     public ResponseEntity<Response> getTags(String query) {
         if (query == null || query.equals("") || query.isBlank()) {
@@ -42,11 +46,11 @@ public class TagService {
         HashMap<String, Double> responseMap = new HashMap<>();
         if (!tags.isEmpty()) {
             Integer maxTagCount = tagRepository.getMaxTagCount();
-            Integer allTagsCount = tagRepository.getAllTagsCount();
-            Double k = (double) allTagsCount / (double) maxTagCount;
+            Integer allPostsCount = postRepository.countAllPostsAtSite();
+            Double k = 1 / ((double) maxTagCount / (double) allPostsCount);
             for (Tag tag : tags) {
-                Double weight = (double) tagRepository.getTagCountByTagId(tag.getId()) / (double) allTagsCount;
-                Double normalWeight = weight * k;
+                Double weight = (double) tagRepository.getTagCountByTagId(tag.getId()) / (double) allPostsCount;
+                Double normalWeight = Math.round(weight * k * 100.0) / 100.0;
                 responseMap.put(tag.getName(), normalWeight);
             }
             ResponseEntity<Response> response = new ResponseEntity<>(new GetTagResponse(responseMap), HttpStatus.OK);
