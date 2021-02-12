@@ -28,7 +28,7 @@ public class TagService {
         }
     }
 
-    private ResponseEntity<Response> getAllTagsList() {
+    public ResponseEntity<Response> getAllTagsList() {
         List<Tag> tags = tagRepository.getAllTagsList();
         return getResponseEntityByTags(tags);
     }

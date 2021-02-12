@@ -41,4 +41,9 @@ public class ApiGeneralController {
     private ResponseEntity<Response> getTags(@RequestParam(value = "query") String query) {
         return tagService.getTags(query);
     }
+
+    @GetMapping(value = "tag")
+    private ResponseEntity<Response> getTagsWithoutQuery() {
+        return tagService.getAllTagsList();
+    }
 }
