@@ -44,7 +44,7 @@ public class UserService {
     private ResponseEntity<Response> getResponseEntityByUserExist(User user) {
         if (user != null) {
             log.info("User" + user.getName() +" found by session");
-            return new ResponseEntity<>(new AuthUserResponse(user, postRepository.countPostsForModeration()),
+            return new ResponseEntity<>(new AuthUserResponse(user, postRepository.countAllPostsForModeration()),
                     HttpStatus.OK);
         } else {
             log.warn("Error! Session not found, user is not authorized");

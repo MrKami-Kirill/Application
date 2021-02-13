@@ -5,6 +5,7 @@ import main.rest.api.response.GetGlobalSettingResponse;
 import main.rest.api.response.GetTagResponse;
 import main.rest.api.response.Response;
 import main.rest.service.GlobalSettingService;
+import main.rest.service.PostService;
 import main.rest.service.TagService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,8 @@ public class ApiGeneralController {
     private GlobalSettingService globalSettingService;
     @Autowired
     private TagService tagService;
+    @Autowired
+    private PostService postService;
 
     public ApiGeneralController() {
     }
@@ -43,7 +46,12 @@ public class ApiGeneralController {
     }
 
     @GetMapping(value = "tag")
-    private ResponseEntity<Response> getTagsWithoutQuery() {
-        return tagService.getAllTagsList();
+    private ResponseEntity<Response> getAllTags() {
+        return tagService.getAllTags();
+    }
+
+    @GetMapping(value = "calendar", params = {"year"})
+    public ResponseEntity<Response> getAllPostsByCalendar(@RequestParam(value = "year") Integer year) {
+        return postService.getAllPostsByCalendar(year);
     }
 }

@@ -26,19 +26,19 @@ public class TagService {
 
     public ResponseEntity<Response> getTags(String query) {
         if (query == null || query.equals("") || query.isBlank()) {
-            return getAllTagsList();
+            return getAllTags();
         } else {
-            return getAllTagsListByQuery(query);
+            return getAllTagsByQuery(query);
         }
     }
 
-    public ResponseEntity<Response> getAllTagsList() {
-        List<Tag> tags = tagRepository.getAllTagsList();
+    public ResponseEntity<Response> getAllTags() {
+        List<Tag> tags = tagRepository.getAllTags();
         return getResponseEntityByTags(tags);
     }
 
-    private ResponseEntity<Response> getAllTagsListByQuery(String query) {
-        List<Tag> tags = tagRepository.getAllTagsListByQuery(query);
+    private ResponseEntity<Response> getAllTagsByQuery(String query) {
+        List<Tag> tags = tagRepository.getAllTagsByQuery(query);
         return getResponseEntityByTags(tags);
     }
 
@@ -46,10 +46,10 @@ public class TagService {
         HashMap<String, Double> responseMap = new HashMap<>();
         if (!tags.isEmpty()) {
             Integer maxTagCount = tagRepository.getMaxTagCount();
-            Integer allPostsCount = postRepository.countAllPostsAtSite();
-            Double k = 1 / ((double) maxTagCount / (double) allPostsCount);
+            Integer countAllPosts = postRepository.countAllPosts();
+            Double k = 1 / ((double) maxTagCount / (double) countAllPosts);
             for (Tag tag : tags) {
-                Double weight = (double) tagRepository.getTagCountByTagId(tag.getId()) / (double) allPostsCount;
+                Double weight = (double) postRepository.countAllPostsByTagId(tag.getId()) / (double) countAllPosts;
                 Double normalWeight = Math.round(weight * k * 100.0) / 100.0;
                 responseMap.put(tag.getName(), normalWeight);
             }

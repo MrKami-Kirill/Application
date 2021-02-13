@@ -156,4 +156,18 @@ public class Post implements Serializable {
     public void setPostComments(Set<PostComment> postComments) {
         this.postComments = postComments;
     }
+
+    @Override
+    public String toString() {
+        return "Post{" +
+                "id=" + id +
+                ", isActive=" + isActive +
+                ", moderationStatus=" + moderationStatus +
+                ", moderatorId=" + moderatorId +
+                ", time=" + time +
+                ", title=" + title +
+                ", text='" + text +
+                ", viewCount=" + viewCount +
+                '}';
+    }
 }

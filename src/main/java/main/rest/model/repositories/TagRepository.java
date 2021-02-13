@@ -17,7 +17,7 @@ public interface TagRepository extends JpaRepository<Tag, Integer> {
             "AND p.moderation_status = 'ACCEPTED' " +
             "AND p.time < NOW() " +
             "ORDER BY t.id DESC", nativeQuery = true)
-    List<Tag> getAllTagsList();
+    List<Tag> getAllTags();
 
     @Query(value = "SELECT DISTINCT t.*" +
             "FROM tags t " +
@@ -28,7 +28,7 @@ public interface TagRepository extends JpaRepository<Tag, Integer> {
             "AND p.moderation_status = 'ACCEPTED' " +
             "AND p.time < NOW() " +
             "ORDER BY t.id DESC", nativeQuery = true)
-    List<Tag> getAllTagsListByQuery(String query);
+    List<Tag> getAllTagsByQuery(String query);
 
     @Query(value = "SELECT MAX(tag_count) " +
             "FROM (" +
@@ -40,33 +40,5 @@ public interface TagRepository extends JpaRepository<Tag, Integer> {
             "AND p.time < NOW() " +
             "GROUP BY t2p.tag_id) " +
             "AS max_tag_count", nativeQuery = true)
-    Integer getMaxTagCount();
-
-
-    @Query(value = "SELECT COUNT(t2p.tag_id)" +
-            "FROM tag2post t2p " +
-            "JOIN posts p ON t2p.post_id = p.id " +
-            "WHERE p.is_active = 1 " +
-            "AND p.moderation_status = 'ACCEPTED' " +
-            "AND p.time < NOW()", nativeQuery = true)
-    Integer getAllTagsCount();
-
-    @Query(value = "SELECT COUNT(t.id)" +
-            "FROM tags t " +
-            "JOIN tag2post t2p ON t.id = t2p.tag_id " +
-            "JOIN posts p ON t2p.post_id = p.id " +
-            "WHERE (t.name LIKE %?%) " +
-            "AND p.is_active = 1 " +
-            "AND p.moderation_status = 'ACCEPTED' " +
-            "AND p.time < NOW()", nativeQuery = true)
-    Integer getAllTagsCountByQuery(String query);
-
-    @Query(value = "SELECT COUNT(*) " +
-            "FROM tag2post tp " +
-            "JOIN posts p ON tp.post_id = p.id " +
-            "WHERE p.is_active = 1 " +
-            "AND p.moderation_status = 'ACCEPTED' " +
-            "AND p.time < NOW() " +
-            "AND tag_id = ?", nativeQuery = true)
-    Integer getTagCountByTagId(int tagId);
+    int getMaxTagCount();
 }
