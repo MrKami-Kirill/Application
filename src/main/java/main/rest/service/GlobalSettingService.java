@@ -1,5 +1,6 @@
 package main.rest.service;
 
+import lombok.extern.log4j.Log4j2;
 import main.rest.api.response.BadRequestMessageResponse;
 import main.rest.api.response.GetGlobalSettingResponse;
 import main.rest.api.response.Response;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@Log4j2
 public class GlobalSettingService {
 
     private static final String MULTIUSER_MODE_CODE = "MULTIUSER_MODE";
@@ -26,24 +28,28 @@ public class GlobalSettingService {
     private GlobalSettingRepository globalSettingRepository;
 
     public ResponseEntity<Response> getGlobalSettings() {
-        GetGlobalSettingResponse response = new GetGlobalSettingResponse();
+        GetGlobalSettingResponse globalSettingResponse = new GetGlobalSettingResponse();
         List<GlobalSetting> globalSettingList = globalSettingRepository.findAll();
         for (GlobalSetting setting : globalSettingList) {
             switch (setting.getCode()) {
                 case MULTIUSER_MODE_CODE:
-                    response.setMultiuserMode(convertStringToBooleanGlobalSettingValue(setting));
+                    globalSettingResponse.setMultiuserMode(convertStringToBooleanGlobalSettingValue(setting));
                     break;
                 case POST_PREMODERATION_CODE:
-                    response.setPostPremoderation(convertStringToBooleanGlobalSettingValue(setting));
+                    globalSettingResponse.setPostPremoderation(convertStringToBooleanGlobalSettingValue(setting));
                     break;
                 case STATISTICS_IS_PUBLIC_CODE:
-                    response.setStatisticsIsPublic(convertStringToBooleanGlobalSettingValue(setting));
+                    globalSettingResponse.setStatisticsIsPublic(convertStringToBooleanGlobalSettingValue(setting));
                     break;
                 default:
                     throw new IllegalStateException("Unexpected value: " + setting.getCode());
             }
         }
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        ResponseEntity<Response> response = new ResponseEntity<>(globalSettingResponse, HttpStatus.OK);
+        log.info("Направляем ответ на запрос /api/settings cо следующими параметрами: {" +
+                "HttpStatus: " + response.getStatusCode() + ", " +
+                response.getBody() + "}");
+        return response;
     }
 
 

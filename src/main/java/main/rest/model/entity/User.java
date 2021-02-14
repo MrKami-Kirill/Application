@@ -55,6 +55,17 @@ public class User implements Serializable {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
     private Set<PostComment> postComments;
 
+    public User() {
+    }
+
+    public User(@NotNull boolean isModerator, @NotNull LocalDateTime regTime, @NotNull String name, @NotNull String email, @NotNull String password) {
+        this.isModerator = isModerator;
+        this.regTime = regTime;
+        this.name = name;
+        this.email = email;
+        this.password = password;
+    }
+
     public int getId() {
         return id;
     }

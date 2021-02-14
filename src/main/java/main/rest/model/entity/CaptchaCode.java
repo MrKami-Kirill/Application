@@ -30,6 +30,15 @@ public class CaptchaCode implements Serializable {
     @NotNull
     private String secretCode;
 
+    public CaptchaCode() {
+    }
+
+    public CaptchaCode(@NotNull LocalDateTime time, @NotNull String code, @NotNull String secretCode) {
+        this.time = time;
+        this.code = code;
+        this.secretCode = secretCode;
+    }
+
     public int getId() {
         return id;
     }

@@ -35,69 +35,77 @@ public class PostService {
 
         boolean isModeValid = List.of("recent", "popular", "best", "early").contains(mode);
         if (offset < 0 || limit < 1 || !isModeValid) {
-            log.warn("Invalid params: " +
+            log.warn("Некорректные параметры для отображения постов: " +
                     "offset:" + offset + "," + "limit:" + limit + "," + "mode:" + mode);
             return new ResponseEntity<>(new BadRequestMessageResponse(
-                    offset < 0 ? "offset < 0" : "",
-                    limit < 1 ? "limit < 1" : "",
-                    !isModeValid ? "Unexpected mode value" : ""),
+                    offset < 0 ? "Сдвиг для отображения постов меньше 0" : "",
+                    limit < 1 ? "Лимит для отображения постов меньше 1" : "",
+                    !isModeValid ? "Режим '" + mode + "' для отображения постов не распознан"  : ""),
                     HttpStatus.BAD_REQUEST);
         } else {
             List<Post> posts = new ArrayList<>();
             int count = postRepository.countAllPosts();
+            log.info("Получено общее кол-во постов на сайте (" + count + ")");
             switch (mode.toLowerCase()) {
                 case ("recent"):
                     posts = postRepository.getRecentPosts(offset, limit);
+                    log.info("Получен список новых постов для отображения: " + Arrays.toString(posts.toArray()));
                     break;
                 case ("popular"):
                     posts = postRepository.getPopularPosts(offset, limit);
+                    log.info("Получен список популярных постов для отображения: " + Arrays.toString(posts.toArray()));
                     break;
                 case ("best"):
                     posts = postRepository.getBestPosts(offset, limit);
+                    log.info("Получен список самых обсуждаемых постов для отображения: " + Arrays.toString(posts.toArray()));
                     break;
                 case ("early"):
                     posts = postRepository.getEarlyPosts(offset, limit);
+                    log.info("Получен список старых постов для отображения: " + Arrays.toString(posts.toArray()));
                     break;
             }
-            log.info("Post's list return with parameters: {" +
-                    " mode: " + mode +
-                    " offset: " + offset +
-                    " limit: " + limit + " }");
-            return new ResponseEntity<>(new GetPostsResponse(count, posts, announceLength), HttpStatus.OK);
+            ResponseEntity<Response> response = new ResponseEntity<>(new GetPostsResponse(count, posts, announceLength), HttpStatus.OK);
+            log.info("Направляется ответ на запрос /api/post cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");
+            return response;
         }
     }
 
     public ResponseEntity<Response> getAllPostsByQuery(String query, int offset, int limit) {
         if (offset < 0 || limit < 1 ) {
-            log.warn("Invalid params: " +
+            log.warn("Некорректные параметры для отображения постов: " +
                     "offset:" + offset + "," + "limit:" + limit);
             return new ResponseEntity<>(new BadRequestMessageResponse(
-                    offset < 0 ? "offset < 0" : "",
-                    limit < 1 ? "limit < 1" : ""),
+                    offset < 0 ? "Сдвиг для отображения постов меньше 0" : "",
+                    limit < 1 ? "Лимит для отображения постов меньше 1" : ""),
                     HttpStatus.BAD_REQUEST);
         } else {
-            List<Post> posts = new ArrayList<>();
+            List<Post> posts;
             int count;
             if (query != null && (query.trim().length() > 0)) {
                 count = postRepository.countAllPostsByQuery(query);
+                log.info("Получено общее кол-во постов на сайте (" + count + ") по строке поиска '" + query + "'");
                 posts = postRepository.getAllPostsByQuery(query, offset, limit);
-                log.info("Post's list return with parameters: {" +
-                        " query: " + query +
-                        " offset: " + offset +
-                        " limit: " + limit + " }");
-                return new ResponseEntity<>(new GetPostsResponse(count, posts, announceLength), HttpStatus.OK);
+                log.info("Получен список постов за по строке поиска '" + query + "' для отображения: " + Arrays.toString(posts.toArray()));
+                ResponseEntity<Response> response = new ResponseEntity<>(new GetPostsResponse(count, posts, announceLength), HttpStatus.OK);
+                log.info("Направляется ответ на запрос /api/post/search cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");
+                return response;
             } else {
                 count = postRepository.countAllPosts();
+                log.info("Получено общее кол-во постов на сайте (" + count + ") без строки поиска");
                 posts = postRepository.getRecentPosts(offset, limit);
-                return new ResponseEntity<>(new GetPostsResponse(count, posts, announceLength), HttpStatus.OK);
+                log.info("Получен список постов за без строки поиска для отображения: " + Arrays.toString(posts.toArray()));
+                ResponseEntity<Response> response = new ResponseEntity<>(new GetPostsResponse(count, posts, announceLength), HttpStatus.OK);
+                log.info("Направляется ответ на запрос /api/post/search cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");
+                return response;
             }
+
         }
     }
 
     public ResponseEntity<Response> getAllPostsByCalendar(Integer qYear) {
         int year = qYear == null ? LocalDateTime.now().getYear() : qYear;
         List<Post> postsByYear = postRepository.getPostsByYear(year);
-        log.info("Return posts for " + year);
+        log.info("Получен список постов за " + year + " год");
         HashMap<Date, Integer> postsMap = new HashMap<>();
         for (Post p : postsByYear) {
             Date postDate = Date.valueOf(p.getTime().toLocalDate());
@@ -105,72 +113,79 @@ public class PostService {
             postsMap.put(postDate, postCount + 1);
         }
         List<Integer> years = postRepository.getYearsWithAnyPosts();
-        log.info("Return all years for which there are posts: " + Arrays.toString(years.toArray()));
-        return new ResponseEntity<>(new GetPostByCalendarResponse(years, postsMap), HttpStatus.OK);
+        log.info("Получен список всех лет, за которые есть посты: " + Arrays.toString(years.toArray()));
+        ResponseEntity<Response> response = new ResponseEntity<>(new GetPostByCalendarResponse(years, postsMap), HttpStatus.OK);
+        log.info("Направляется ответ на запрос /api/post/calendar cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");
+        return response;
     }
 
     public ResponseEntity<Response> getAllPostsByDate(String date, int offset, int limit) {
         if (offset < 0 || limit < 1 ) {
-            log.warn("Invalid params: " +
-                    "offset:" + offset + "," + "limit:" + limit);
+            log.warn("Некорректные параметры для отображения постов: " +
+                    "offset: " + offset + "," + "limit: " + limit + ", " + "date:" + date);
             return new ResponseEntity<>(new BadRequestMessageResponse(
-                    offset < 0 ? "offset < 0" : "",
-                    limit < 1 ? "limit < 1" : ""),
+                    offset < 0 ? "Сдвиг для отображения постов меньше 0" : "",
+                    limit < 1 ? "Лимит для отображения постов меньше 1" : "",
+                    date == null ? "Дата не задана" : ""),
                     HttpStatus.BAD_REQUEST);
         } else {
-            List<Post> posts = postRepository.getAllPostsByDate(date, offset, limit);
             int count = postRepository.countAllPostsByDate(date);
-            log.info("Post's list return with parameters: {" +
-                    " date: " + date +
-                    " offset: " + offset +
-                    " limit: " + limit + " }");
-            return new ResponseEntity<>(new GetPostsResponse(count, posts, announceLength), HttpStatus.OK);
+            log.info("Получено общее кол-во постов на сайте (" + count + ") за дату '" + date + "'");
+            List<Post> posts = postRepository.getAllPostsByDate(date, offset, limit);
+            log.info("Получен список постов за '" + date + "' для отображения: " + Arrays.toString(posts.toArray()));
+            ResponseEntity<Response> response = new ResponseEntity<>(new GetPostsResponse(count, posts, announceLength), HttpStatus.OK);
+            log.info("Направляется ответ на запрос /api/post/byDate cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");
+            return response;
         }
     }
 
     public ResponseEntity<Response> getAllPostsByTag(String tag, int offset, int limit) {
         if (offset < 0 || limit < 1 ) {
-            log.warn("Invalid params: " +
-                    "offset:" + offset + "," + "limit:" + limit);
+            log.warn("Некорректные параметры для отображения постов: " +
+                    "offset:" + offset + "," + "limit:" + limit + ", " + "date:" + tag);
             return new ResponseEntity<>(new BadRequestMessageResponse(
-                    offset < 0 ? "offset < 0" : "",
-                    limit < 1 ? "limit < 1" : ""),
+                    offset < 0 ? "Сдвиг для отображения постов меньше 0" : "",
+                    limit < 1 ? "Лимит для отображения постов меньше 1" : "",
+                    (tag == null || tag.equals("") || tag.isBlank()) ? "Тег не задан" : ""),
                     HttpStatus.BAD_REQUEST);
         } else {
-            List<Post> posts = postRepository.getAllPostsByTag(tag, offset, limit);
             int count = postRepository.countAllPostsByTag(tag);
-            log.info("Post's list return with parameters: {" +
-                    " tag: " + tag +
-                    " offset: " + offset +
-                    " limit: " + limit + " }");
-            return new ResponseEntity<>(new GetPostsResponse(count, posts, announceLength), HttpStatus.OK);
+            log.info("Получено общее кол-во постов на сайте (" + count + ") по тегу '" + tag + "'");
+            List<Post> posts = postRepository.getAllPostsByTag(tag, offset, limit);
+            log.info("Получен список постов по тегу '" + tag + "' для отображения: " + Arrays.toString(posts.toArray()));
+            ResponseEntity<Response> response = new ResponseEntity<>(new GetPostsResponse(count, posts, announceLength), HttpStatus.OK);
+            log.info("Направляется ответ на запрос /api/post/byTag cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");
+            return response;
         }
     }
 
     public ResponseEntity<Response> getPostById(Integer id, HttpSession session) {
         Post post = postRepository.findById(id).orElse(null);
         if (post == null) {
-            log.warn("Post with id=" + id + " not found!");
-            return new ResponseEntity<>(new BadRequestMessageResponse("Post not found!"), HttpStatus.BAD_REQUEST);
+            log.warn("Ошибка! Пост с id=" + id + " не найден");
+            return new ResponseEntity<>(new BadRequestMessageResponse("Пост не найден"), HttpStatus.BAD_REQUEST);
         }
+        log.info("Получен пост с id=" + post.getId());
 
         User user = userService.getUserBySession(session);
 
         if (user == null || (post.getUser() != user && !user.isModerator())) {
             if (!post.isActive() || (post.getModerationStatus() != ModerationStatus.ACCEPTED) || post.getTime().isAfter(LocalDateTime.now())) {
-                log.warn("Incorrect post " + post.toString() +  " to display!");
+                log.warn("Некорректный пост " + post.toString() +  " для отображения пользователю");
                 return new ResponseEntity<>(new BadRequestMessageResponse(
-                        !post.isActive() ? "Invalid status for display!" : "",
-                        post.getTime().isAfter(LocalDateTime.now()) ? "Invalid time to display!" : "",
-                        (post.getModerationStatus() != ModerationStatus.ACCEPTED) ? "Invalid moderation status for display!" : ""), HttpStatus.BAD_REQUEST);
+                        !post.isActive() ? "Пост не активный" : "",
+                        post.getTime().isAfter(LocalDateTime.now()) ? "Время публикации поста еще не наступило" : "",
+                        (post.getModerationStatus() != ModerationStatus.ACCEPTED) ? "Пост не одобрен модератором" : ""), HttpStatus.BAD_REQUEST);
             }
-            post.setViewCount(post.getViewCount() + 1);
+            int totalViewCount = post.getViewCount() + 1;
+            post.setViewCount(totalViewCount);
             postRepository.save(post);
-            log.info("Count post's views (postId = " + id + ") has increased. Total Views = 3");
+            log.info("Кол-во просмотров поста с id=" + id.toString() + " увеличено на 1. Итоговое кол-во просмотров " + totalViewCount);
         }
 
-        log.info("Post with id=" + id + " returned!");
-        return new ResponseEntity<>(new GetFullPostResponse(post), HttpStatus.OK);
+        ResponseEntity<Response> response = new ResponseEntity<>(new GetFullPostResponse(post), HttpStatus.OK);
+        log.info("Направляется ответ на запрос /api/post/{id} cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");
+        return response;
     }
 
 }

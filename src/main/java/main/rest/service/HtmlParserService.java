@@ -11,12 +11,12 @@ public class HtmlParserService {
 
     public static String parseStringFromHtml(String str) {
         if (str == null || str.isBlank()) {
-            log.info("String is empty!");
+            log.info("Строка пустая или не заполнена!");
             return null;
         }
         Document html = Jsoup.parse(str);
         String result = html.wholeText();
-        log.info("Parse success! Return: " + result);
+        log.info("Строка успешно спарсена в " + result);
         return result;
     }
 }

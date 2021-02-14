@@ -62,4 +62,14 @@ public class GlobalSetting implements Serializable {
     public void setValue(String value) {
         this.value = value;
     }
+
+    @Override
+    public String toString() {
+        return "GlobalSettings{" +
+                "id=" + id +
+                ", code='" + code +
+                ", name='" + name +
+                ", value='" + value +
+                '}';
+    }
 }

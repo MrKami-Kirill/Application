@@ -46,20 +46,25 @@ public class TagService {
         HashMap<String, Double> responseMap = new HashMap<>();
         if (!tags.isEmpty()) {
             Integer maxTagCount = tagRepository.getMaxTagCount();
+            log.info("Получен вес (" + maxTagCount + ") для самого популярного тега на сайте");
             Integer countAllPosts = postRepository.countAllPosts();
+            log.info("Получено общее кол-во публикаций на сайте (" + countAllPosts + ")");
             Double k = 1 / ((double) maxTagCount / (double) countAllPosts);
+            log.info("Получен коэффициент нормализации k=" + k);
             for (Tag tag : tags) {
                 Double weight = (double) postRepository.countAllPostsByTagId(tag.getId()) / (double) countAllPosts;
+                log.info("Получен вес (" + weight + ") для тега '" + tag.getName() + "'");
                 Double normalWeight = Math.round(weight * k * 100.0) / 100.0;
+                log.info("Получен нормированный вес (" + normalWeight + ") для тега '" + tag.getName() + "'");
                 responseMap.put(tag.getName(), normalWeight);
             }
             ResponseEntity<Response> response = new ResponseEntity<>(new GetTagResponse(responseMap), HttpStatus.OK);
-            log.info("Return response " + (response.getBody() == null ? "with empty body"
-                    : "with tags: " + response.getBody().toString()));
+            log.info("Направляем ответ " + (response.getBody() == null ? "с пустым телом"
+                    : "с тегами: " + response.getBody().toString()));
             return response;
 
         } else {
-            log.info("Tags not found!");
+            log.info("Теги не найдены");
             return ResponseEntity.status(HttpStatus.OK).body(null);
         }
     }
