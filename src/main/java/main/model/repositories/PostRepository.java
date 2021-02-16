@@ -82,6 +82,20 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             "ORDER BY p.time DESC LIMIT ?3 OFFSET ?2", nativeQuery = true)
     int countMyPublishedPosts(Integer userId, int offset, int limit);
 
+    @Query(value = "SELECT COUNT(*) FROM posts p " +
+            "WHERE p.is_active = 1 " +
+            "AND p.moderation_status = 'NEW' " +
+            "ORDER BY p.time DESC LIMIT ?2 OFFSET ?1", nativeQuery = true)
+    int countAllModeratePosts(int offset, int limit);
+
+    @Query(value = "SELECT COUNT(*) FROM posts p " +
+            "WHERE p.is_active = 1 " +
+            "AND p.moderation_status = ?1 " +
+            "AND p.moderator_id = ?2 " +
+            "AND p.moderator_id IS NOT NULL " +
+            "ORDER BY p.time DESC LIMIT ?4 OFFSET ?3", nativeQuery = true)
+    int countAllModeratePostsByMe(String status, Integer moderatorId, int offset, int limit);
+
     @Query(value = "SELECT * FROM posts p WHERE p.is_active = 1 " +
             "AND p.moderation_status = 'ACCEPTED' " +
             "AND p.time < NOW() " +
@@ -173,5 +187,19 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             "AND p.user_id = ?1 " +
             "ORDER BY p.time DESC LIMIT ?3 OFFSET ?2", nativeQuery = true)
     List<Post> getMyPublishedPosts(Integer userId, int offset, int limit);
+
+    @Query(value = "SELECT * FROM posts p " +
+            "WHERE p.is_active = 1 " +
+            "AND p.moderation_status = 'NEW' " +
+            "ORDER BY p.time DESC LIMIT ?2 OFFSET ?1", nativeQuery = true)
+    List<Post> getAllModeratePosts(int offset, int limit);
+
+    @Query(value = "SELECT * FROM posts p " +
+            "WHERE p.is_active = 1 " +
+            "AND p.moderation_status = ?1 " +
+            "AND p.moderator_id = ?2 " +
+            "AND p.moderator_id IS NOT NULL " +
+            "ORDER BY p.time DESC LIMIT ?4 OFFSET ?3", nativeQuery = true)
+    List<Post> getAllModeratePostsByMe(String status, Integer moderatorId, int offset, int limit);
 
 }

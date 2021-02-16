@@ -1,17 +1,17 @@
 package main.service;
 
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Service;
 
 @Service
-@Log4j2
+@Slf4j
 public class HtmlParserService {
-
+    
     public static String parseStringFromHtml(String str) {
         if (str == null || str.isBlank()) {
-            log.info("Строка пустая или не заполнена!");
+            log.warn("Строка пустая или не заполнена!");
             return null;
         }
         Document html = Jsoup.parse(str);

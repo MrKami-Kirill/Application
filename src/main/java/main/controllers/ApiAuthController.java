@@ -2,13 +2,10 @@ package main.controllers;
 
 
 import lombok.Data;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import main.api.request.PostLoginRequest;
 import main.api.request.PostRegisterRequest;
-import main.api.response.BooleanResponse;
-import main.api.response.GetLoginResponse;
 import main.api.response.Response;
-import main.model.repositories.UserRepository;
 import main.service.CaptchaCodeService;
 import main.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,10 +17,10 @@ import java.security.Principal;
 
 @RestController
 @RequestMapping(value = "/api/auth/")
-@Log4j2
 @Data
+@Slf4j
 public class ApiAuthController {
-
+    
     @Autowired
     private UserService userService;
 

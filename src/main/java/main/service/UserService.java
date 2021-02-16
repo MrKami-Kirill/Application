@@ -1,6 +1,6 @@
 package main.service;
 
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import main.api.request.PostLoginRequest;
 import main.api.request.PostRegisterRequest;
 import main.api.response.*;
@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -26,13 +25,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpSession;
-import java.lang.reflect.InvocationTargetException;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.*;
 
 @Service(value = "userService")
-@Log4j2
+@Slf4j
 public class UserService implements UserDetailsService {
 
     @Value("${user.password.length}")
@@ -61,9 +59,9 @@ public class UserService implements UserDetailsService {
             return new ResponseEntity<>(new BooleanResponse(false), HttpStatus.OK);
         }
         String email = principal.getName();
-        User currentUser = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User " + email + " not found!"));
+        User currentUser = getUserByEmail(email);
         ResponseEntity<Response> response = new ResponseEntity<>(new AuthUserResponse(currentUser, postService.getAnnounceLength()), HttpStatus.OK);
-        log.info("Получен ответ на запрос /api/auth/check. Пользователь '" + email + "' успешно авторизован");
+        log.info("Получен ответ на запрос /api/auth/check. Пользователь с email '" + email + "' успешно авторизован");
         return response;
 
     }
@@ -83,7 +81,7 @@ public class UserService implements UserDetailsService {
             String passwordEncode = new BCryptPasswordEncoder(12).encode(password);
             User user = new User(0, LocalDateTime.now(), name, email, passwordEncode);
             userRepository.save(user);
-            log.info("Пользователь '" + email + "' c id=" + user.getId() + " успешно зарегистрирован на сайте");
+            log.info("Пользователь '" + email + "' c ID=" + user.getId() + " успешно зарегистрирован на сайте");
             return new ResponseEntity<>(new BooleanResponse(true), HttpStatus.OK);
         } else {
             HashMap<String, String> errors = new HashMap<>();
@@ -103,7 +101,7 @@ public class UserService implements UserDetailsService {
                 log.warn("Введенной значение каптчи '" + captcha + "' не совпало с картинкой");
                 errors.put("captcha", "Код с картинки введён неверно");
             }
-            return new ResponseEntity<>(new BadRequestMessageForRegistrationResponse(errors), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new BadRequestMessageResponse(errors), HttpStatus.BAD_REQUEST);
         }
 
     }
@@ -115,7 +113,7 @@ public class UserService implements UserDetailsService {
             Authentication auth = authenticationManager
                     .authenticate(new UsernamePasswordAuthenticationToken(email, password));
             SecurityContextHolder.getContext().setAuthentication(auth);
-            User user = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User " + email + " not found!"));
+            User user = getUserByEmail(email);
             sessionMap.put(session.getId(), user.getId());
             int moderationCount = 0;
             if (user.isModerator() == 1) {
@@ -123,7 +121,7 @@ public class UserService implements UserDetailsService {
                 log.info("Получено общее кол-во постов на сайте (" + moderationCount + "), требующих проверки модератором");
             }
             ResponseEntity<Response> response = new ResponseEntity<>(new GetLoginResponse(user, moderationCount), HttpStatus.OK);
-            log.info("Пользователь с id=" + user.getId() + "успешно вошел на сайт. ID сессии: " + session.getId());
+            log.info("Пользователь с ID=" + user.getId() + "успешно вошел на сайт. ID сессии: " + session.getId());
             return response;
 
         } catch (Exception ex) {
@@ -141,7 +139,7 @@ public class UserService implements UserDetailsService {
         }
         sessionMap.remove(sessionId);
         session.invalidate();
-        log.info("Получен ответ на запрос /api/auth/logout. Пользователь " + principal.getName() + " успешно вылогинен. Сессия с ID=" + sessionId + " удалена");
+        log.info("Получен ответ на запрос /api/auth/logout. Пользователь с email '" + principal.getName() + "' успешно вылогинен. Сессия с ID=" + sessionId + " удалена");
         return response;
     }
 
@@ -152,7 +150,7 @@ public class UserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User " + email + " not found!"));
+        User user = getUserByEmail(email);
         return SecurityUser.fromUser(user);
     }
 
@@ -172,5 +170,9 @@ public class UserService implements UserDetailsService {
         Optional<User> optionalUser = userRepository.findById(id);
         return optionalUser.map(user -> new ResponseEntity<>(user, HttpStatus.OK))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
+    }
+
+    private User getUserByEmail(String email) {
+        return userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User '" + email + "' not found!"));
     }
 }

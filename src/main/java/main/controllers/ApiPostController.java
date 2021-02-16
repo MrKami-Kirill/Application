@@ -1,6 +1,7 @@
 package main.controllers;
 
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
+import main.api.request.PostAddPostRequest;
 import main.api.response.Response;
 import main.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,12 +10,13 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
 
 @RestController
 @RequestMapping(value = "/api/")
-@Log4j2
+@Slf4j
 public class ApiPostController {
-
+    
     @Autowired
     private PostService postService;
 
@@ -84,6 +86,31 @@ public class ApiPostController {
                 "Limit: " + limit + ", " +
                 "Status: " + status + "}");
         return postService.getMyPosts(status, offset, limit, request.getSession());
+    }
+
+    @GetMapping(value = "post/moderation", params = {"status", "offset", "limit"})
+    @PreAuthorize("hasAuthority('user:moderate')")
+    public ResponseEntity<Response> getAllModeratePosts(
+                                               @RequestParam(value = "status") String status,
+                                               @RequestParam(value = "offset") int offset,
+                                               @RequestParam(value = "limit") int limit,
+                                               HttpServletRequest request) {
+        log.info("Отправлен POST запрос на /api/post/moderation со следующими параметрами: {" +
+                "Offset: " + offset + ", " +
+                "Limit: " + limit + "}");
+        return postService.getAllModeratePosts(status, offset, limit, request.getSession());
+    }
+
+    @PostMapping(value = "post")
+    @PreAuthorize("hasAuthority('user:write')")
+    public ResponseEntity<Response> addPost(@RequestBody PostAddPostRequest addPostRequest, HttpServletRequest request) {
+        log.info("Отправлен POST запрос на /api/auth/login со следующими параметрами: {" +
+                "TimeStamp: " + addPostRequest.getTimestamp() + ", " +
+                "Active: " + addPostRequest.getActive() + ", " +
+                "Title: " + addPostRequest.getActive() + ", " +
+                "Text: " + addPostRequest.getActive() + ", " +
+                "Tags: " + Arrays.toString(addPostRequest.getTags().toArray()) + "}");
+        return null;
     }
 
 }

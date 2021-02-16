@@ -6,7 +6,7 @@ import com.github.cage.image.EffectConfig;
 import com.github.cage.image.Painter;
 import com.github.cage.image.RgbColorGenerator;
 import com.github.cage.token.RandomTokenGenerator;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import main.api.response.GetCaptchaCodeResponse;
 import main.api.response.Response;
 import main.model.entity.CaptchaCode;
@@ -25,9 +25,9 @@ import java.util.Base64;
 import java.util.Random;
 
 @Service
-@Log4j2
+@Slf4j
 public class CaptchaCodeService {
-
+    
     @Value("${captcha.secret_code_length}")
     private int secretCodeLength;
     @Value("${captcha.timeout}")
@@ -42,8 +42,6 @@ public class CaptchaCodeService {
     private int captchaImageHeight;
     @Value("${captcha.image.text.length}")
     private int captchaImageTextLength;
-
-
 
     @Autowired
     private CaptchaCodeRepository captchaCodeRepository;
@@ -66,7 +64,7 @@ public class CaptchaCodeService {
         log.info("Код каптчи сконвертирован в base64 {" + captchaImageBase64 + "}");
         CaptchaCode captchaCode = new CaptchaCode(LocalDateTime.now(), token, secretCode);
         captchaCodeRepository.save(captchaCode);
-        log.info("Создана новая запись в captcha_code с id=" + captchaCode.getId());
+        log.info("Создана новая запись в captcha_code с ID=" + captchaCode.getId());
         ResponseEntity<Response> response = new ResponseEntity<>(new GetCaptchaCodeResponse(secretCode, captchaImageBase64), HttpStatus.OK);
         log.info("Направляем ответ на запрос /api/auth/captcha cо следующими параметрами: {" +
                 "HttpStatus: " + response.getStatusCode() + ", " +

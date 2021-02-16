@@ -27,6 +27,10 @@ blog:
 post:
   announce:
     max_length: 150
+  title:
+    min_length: 3
+  text:
+    min_length: 50
 
 captcha:
   secret_code_length: 22

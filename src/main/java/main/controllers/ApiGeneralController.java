@@ -1,6 +1,6 @@
 package main.controllers;
 
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import main.api.response.GetInitResponse;
 import main.api.response.Response;
 import main.service.GlobalSettingService;
@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(value = "/api/")
-@Log4j2
+@Slf4j
 public class ApiGeneralController {
-
+    
     @Autowired
     private GetInitResponse getInitResponse;
     @Autowired

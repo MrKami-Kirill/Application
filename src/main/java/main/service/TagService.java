@@ -1,6 +1,6 @@
 package main.service;
 
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import main.api.response.Response;
 import main.api.response.GetTagResponse;
 import main.model.entity.Tag;
@@ -15,9 +15,9 @@ import java.util.HashMap;
 import java.util.List;
 
 @Service
-@Log4j2
+@Slf4j
 public class TagService {
-
+    
     @Autowired
     private TagRepository tagRepository;
 

@@ -2,19 +2,17 @@ package main.api.response;
 
 import lombok.Data;
 
-import java.util.Arrays;
-import java.util.stream.Collectors;
+import java.util.HashMap;
 
 @Data
 public class BadRequestMessageResponse implements Response {
-
     private boolean result;
-    private String message;
+    private HashMap<String, String> errors;
 
-    public BadRequestMessageResponse(String... args) {
+    public BadRequestMessageResponse(HashMap<String, String> errors) {
         this.result = false;
-        this.message = Arrays.stream(args).filter(s ->
-                (s != null && !s.isBlank()) && !s.equalsIgnoreCase(""))
-                .collect(Collectors.joining(". "));
+        this.errors = errors;
     }
+
+
 }

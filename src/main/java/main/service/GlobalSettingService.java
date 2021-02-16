@@ -1,6 +1,7 @@
 package main.service;
 
 
+import lombok.extern.slf4j.Slf4j;
 import main.api.response.GetGlobalSettingResponse;
 import main.api.response.Response;
 import main.model.entity.GlobalSetting;
@@ -9,14 +10,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import lombok.extern.log4j.Log4j2;
 
 import java.util.List;
 
 @Service
-@Log4j2
+@Slf4j
 public class GlobalSettingService {
-
+    
     private static final String MULTIUSER_MODE_CODE = "MULTIUSER_MODE";
     private static final String POST_PREMODERATION_CODE = "POST_PREMODERATION";
     private static final String STATISTICS_IS_PUBLIC_CODE = "STATISTICS_IS_PUBLIC";
