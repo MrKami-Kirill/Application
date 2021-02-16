@@ -7,5 +7,6 @@
 # Editor-based HTTP Client requests
 /httpRequests/
 
+out/
 target/
 

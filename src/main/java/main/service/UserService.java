@@ -4,9 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import main.api.request.PostLoginRequest;
 import main.api.request.PostRegisterRequest;
 import main.api.response.*;
-import main.model.entity.CaptchaCode;
 import main.model.entity.User;
-import main.model.repositories.CaptchaCodeRepository;
 import main.model.repositories.PostRepository;
 import main.model.repositories.UserRepository;
 import main.security.SecurityUser;
@@ -48,10 +46,13 @@ public class UserService implements UserDetailsService {
     private PostService postService;
 
     @Autowired
-    private CaptchaCodeRepository captchaCodeRepository;
+    private CaptchaCodeService captchaCodeService;
 
     @Autowired
     private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private GlobalSettingService globalSettingService;
 
     public ResponseEntity<Response> checkAuth(Principal principal) {
         if (principal == null) {
@@ -67,6 +68,12 @@ public class UserService implements UserDetailsService {
     }
 
     public ResponseEntity<Response> register(PostRegisterRequest registerRequest) {
+
+        if (!globalSettingService.getGlobalSettingValue("MULTIUSER_MODE")) {
+            log.warn("Регистрация нового пользователя невозможна, т.к. глобаальная настройка сайта MULTIUSER_MODE включена");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
         String email = registerRequest.getEmail();
         String name = registerRequest.getName();
         String password = registerRequest.getPassword();
@@ -76,7 +83,7 @@ public class UserService implements UserDetailsService {
         boolean isEmailExist = userRepository.isUserExistByEmail(email.toLowerCase()) > 0;
         boolean isNameValid = name != null && !name.equals("") && !name.isBlank();
         boolean isPasswordLengthValid = password.length() >= userPasswordLength;
-        boolean isCaptchaValid = isCaptchaValid(captcha, captchaSecret);
+        boolean isCaptchaValid = captchaCodeService.isCaptchaValid(captcha, captchaSecret);
         if (!isEmailExist && isNameValid && isPasswordLengthValid && isCaptchaValid) {
             String passwordEncode = new BCryptPasswordEncoder(12).encode(password);
             User user = new User(0, LocalDateTime.now(), name, email, passwordEncode);
@@ -141,11 +148,6 @@ public class UserService implements UserDetailsService {
         session.invalidate();
         log.info("Получен ответ на запрос /api/auth/logout. Пользователь с email '" + principal.getName() + "' успешно вылогинен. Сессия с ID=" + sessionId + " удалена");
         return response;
-    }
-
-    private boolean isCaptchaValid(String captcha, String captchaSecret) {
-        CaptchaCode captchaCode = captchaCodeRepository.getCaptchaBySecretCode(captchaSecret);
-        return captchaCode.getCode().equals(captcha);
     }
 
     @Override

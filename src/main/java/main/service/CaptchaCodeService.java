@@ -106,4 +106,9 @@ public class CaptchaCodeService {
     private String generateSecretCode() {
         return RandomStringUtils.random(secretCodeLength, true, true);
     }
+
+    public boolean isCaptchaValid(String captcha, String captchaSecret) {
+        CaptchaCode captchaCode = captchaCodeRepository.getCaptchaBySecretCode(captchaSecret);
+        return captchaCode.getCode().equals(captcha);
+    }
 }

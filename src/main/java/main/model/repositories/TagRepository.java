@@ -1,10 +1,12 @@
 package main.model.repositories;
 
 import main.model.entity.Tag;
+import main.model.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface TagRepository extends JpaRepository<Tag, Integer> {
 
@@ -41,4 +43,11 @@ public interface TagRepository extends JpaRepository<Tag, Integer> {
             "GROUP BY t2p.tag_id) " +
             "AS max_tag_count", nativeQuery = true)
     int getMaxTagCount();
+
+    @Query(value = "SELECT " +
+            "IF((SELECT COUNT(*) FROM users WHERE name = ?) > 0, TRUE, FALSE) " +
+            "FROM tags;", nativeQuery = true)
+    Integer isTagExist(String email);
+
+    Optional<User> findByName(String name);
 }

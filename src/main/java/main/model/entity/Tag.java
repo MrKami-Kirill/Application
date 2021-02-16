@@ -20,8 +20,17 @@ public class Tag implements Serializable {
     @Column(name = "name", columnDefinition = "VARCHAR(25%)")
     private String name;
 
+    public Tag() {
+    }
+
+    public Tag(String name) {
+        this.name = name;
+    }
+
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "idTag")
     private Set<TagToPost> tagToPosts;
+
+
 
     public int getId() {
         return id;

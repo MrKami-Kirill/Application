@@ -24,6 +24,14 @@ public class TagToPost implements Serializable {
     @JoinColumn(name = "post_id", nullable = false)
     private Post idPost;
 
+    public TagToPost() {
+    }
+
+    public TagToPost(Tag idTag, Post idPost) {
+        this.idTag = idTag;
+        this.idPost = idPost;
+    }
+
     public int getId() {
         return id;
     }

@@ -33,7 +33,7 @@ public class ApiGeneralController {
     @GetMapping(value = "settings")
     private ResponseEntity<Response> settings() {
         log.info("Отправлен GET запрос на /api/settings");
-        return globalSettingService.getGlobalSettings();
+        return globalSettingService.getGlobalSettingsResponse();
     }
 
     @GetMapping(value = "init")

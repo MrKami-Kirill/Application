@@ -16,7 +16,7 @@ import java.util.List;
 @Service
 @Slf4j
 public class GlobalSettingService {
-    
+
     private static final String MULTIUSER_MODE_CODE = "MULTIUSER_MODE";
     private static final String POST_PREMODERATION_CODE = "POST_PREMODERATION";
     private static final String STATISTICS_IS_PUBLIC_CODE = "STATISTICS_IS_PUBLIC";
@@ -27,19 +27,19 @@ public class GlobalSettingService {
     @Autowired
     private GlobalSettingRepository globalSettingRepository;
 
-    public ResponseEntity<Response> getGlobalSettings() {
+    public ResponseEntity<Response> getGlobalSettingsResponse() {
         GetGlobalSettingResponse globalSettingResponse = new GetGlobalSettingResponse();
-        List<GlobalSetting> globalSettingList = globalSettingRepository.findAll();
-        for (GlobalSetting setting : globalSettingList) {
+        List<GlobalSetting> globalSettings = globalSettingRepository.findAll();
+        for (GlobalSetting setting : globalSettings) {
             switch (setting.getCode()) {
                 case MULTIUSER_MODE_CODE:
-                    globalSettingResponse.setMultiuserMode(convertStringToBooleanGlobalSettingValue(setting));
+                    globalSettingResponse.setMultiuserMode(convertStringToBooleanGlobalSettingValue(setting.getValue()));
                     break;
                 case POST_PREMODERATION_CODE:
-                    globalSettingResponse.setPostPremoderation(convertStringToBooleanGlobalSettingValue(setting));
+                    globalSettingResponse.setPostPremoderation(convertStringToBooleanGlobalSettingValue(setting.getValue()));
                     break;
                 case STATISTICS_IS_PUBLIC_CODE:
-                    globalSettingResponse.setStatisticsIsPublic(convertStringToBooleanGlobalSettingValue(setting));
+                    globalSettingResponse.setStatisticsIsPublic(convertStringToBooleanGlobalSettingValue(setting.getValue()));
                     break;
                 default:
                     throw new IllegalStateException("Unexpected value: " + setting.getCode());
@@ -52,17 +52,22 @@ public class GlobalSettingService {
         return response;
     }
 
+    public boolean getGlobalSettingValue(String code) {
+        String value = globalSettingRepository.getGlobalSettingValue(code);
+        return convertStringToBooleanGlobalSettingValue(value);
+    }
 
-    private boolean convertStringToBooleanGlobalSettingValue(GlobalSetting setting) {
+
+    private boolean convertStringToBooleanGlobalSettingValue(String value) {
         boolean boolValue = false;
-        switch (setting.getValue()) {
+        switch (value) {
             case "YES":
                 boolValue = true;
                 break;
             case "NO":
                 break;
             default:
-                throw new IllegalStateException("Unexpected value: " + setting.getValue());
+                throw new IllegalStateException("Unexpected value: " + value);
             }
             return boolValue;
         }

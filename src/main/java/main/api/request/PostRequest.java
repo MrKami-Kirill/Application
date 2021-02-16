@@ -9,7 +9,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PostAddPostRequest implements Request {
+public class PostRequest implements Request {
     private String timestamp;
     private int active;
     private String title;

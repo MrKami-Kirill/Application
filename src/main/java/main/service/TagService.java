@@ -3,16 +3,22 @@ package main.service;
 import lombok.extern.slf4j.Slf4j;
 import main.api.response.Response;
 import main.api.response.GetTagResponse;
+import main.model.entity.Post;
 import main.model.entity.Tag;
+import main.model.entity.TagToPost;
 import main.model.repositories.PostRepository;
 import main.model.repositories.TagRepository;
+import main.model.repositories.TagToPostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -23,6 +29,9 @@ public class TagService {
 
     @Autowired
     private PostRepository postRepository;
+
+    @Autowired
+    private TagToPostRepository tagToPostRepository;
 
     public ResponseEntity<Response> getTags(String query) {
         if (query == null || query.equals("") || query.isBlank()) {
@@ -66,6 +75,58 @@ public class TagService {
         } else {
             log.info("Теги не найдены");
             return ResponseEntity.status(HttpStatus.OK).body(null);
+        }
+    }
+
+    public List<String> getAllTagsForStringArray() {
+        List<String> tags = new ArrayList<>();
+        for (Tag tag : tagRepository.findAll()) {
+            tags.add(tag.getName().toUpperCase(Locale.ROOT));
+        }
+        return tags;
+    }
+
+    public List<Tag> getNewTags(List<String> tags, List<String> oldTagNameList) {
+        List<Tag> newTags = new ArrayList<>();
+        for (String tag : tags) {
+            if (!oldTagNameList.contains(tag.toUpperCase(Locale.ROOT))) {
+                log.info("При создании поста добавлен новый тэг '" + tag + "'");
+                Tag newTag = new Tag(tag);
+                tagRepository.save(newTag);
+                newTags.add(newTag);
+            }
+        }
+
+        return newTags;
+    }
+
+    public void addNewTagsByPost(List<String> newTagNameList, Post newPost) {
+
+        List<String> newTagNameUpperList = new ArrayList<>();
+        List<String> oldTagNameUpperList = new ArrayList<>();
+        List<Tag> oldTagList = tagRepository.findAll();
+
+        for (String newTagNameUpper : newTagNameList) {
+            newTagNameUpperList.add(newTagNameUpper.toUpperCase().trim());
+        }
+
+        for (Tag oldTag : oldTagList) {
+            oldTagNameUpperList.add(oldTag.getName().toUpperCase().trim());
+        }
+
+        for (String newTagName : newTagNameList) {
+            if (!oldTagNameUpperList.contains(newTagName.toUpperCase().trim())) {
+                Tag newTag = new Tag(newTagName.trim());
+                tagRepository.save(newTag);
+                log.info("При создании поста добавлен новый тэг '" + newTagName + "'");
+            }
+        }
+
+        for (Tag tag : tagRepository.findAll()) {
+            if (newTagNameUpperList.contains(tag.getName().toUpperCase(Locale.ROOT).trim())) {
+                tagToPostRepository.save(new TagToPost(tag, newPost));
+                log.info("Пост с ID=" + newPost.getId() + " связан с тегом '" + tag.getName() + "'");
+            }
         }
     }
 

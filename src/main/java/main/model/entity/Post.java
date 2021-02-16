@@ -61,6 +61,32 @@ public class Post implements Serializable {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "post")
     private Set<PostComment> postComments;
 
+    public Post() {
+    }
+
+    public Post(@NotNull boolean isActive,
+                @NotNull ModerationStatus moderationStatus,
+                Integer moderatorId,
+                @NotNull LocalDateTime time,
+                @NotNull String title,
+                @NotNull String text,
+                @NotNull int viewCount,
+                User user) {
+        this.isActive = isActive;
+        this.moderationStatus = moderationStatus;
+        this.moderatorId = moderatorId;
+        this.time = time;
+        this.title = title;
+        this.text = text;
+        this.viewCount = viewCount;
+        this.user = user;
+        this.tagToPosts = tagToPosts;
+        this.postVotes = postVotes;
+        this.postComments = postComments;
+    }
+
+
+
     public int getId() {
         return id;
     }

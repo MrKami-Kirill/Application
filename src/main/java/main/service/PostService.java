@@ -2,13 +2,13 @@ package main.service;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import main.api.request.PostAddPostRequest;
+import main.api.request.PostRequest;
 import main.api.response.*;
 import main.model.ModerationStatus;
 import main.model.entity.Post;
+import main.model.entity.TagToPost;
 import main.model.entity.User;
 import main.model.repositories.PostRepository;
-import main.model.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -27,6 +27,8 @@ import java.util.*;
 @Slf4j
 public class PostService {
 
+    private static final String LOCAL_DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
+
     @Value("${post.announce.max_length}")
     private int announceLength;
 
@@ -43,7 +45,13 @@ public class PostService {
     private UserService userService;
 
     @Autowired
-    private UserRepository userRepository;
+    private GlobalSettingService globalSettingService;
+
+    @Autowired
+    private TagService tagService;
+
+    @Autowired
+    private TagToPostService tagToPostService;
 
     public ResponseEntity<Response> getAllPosts(int offset, int limit, String mode) {
 
@@ -359,32 +367,93 @@ public class PostService {
         }
     }
 
-    public ResponseEntity<Response> addPost(PostAddPostRequest addPostRequest, HttpSession session) {
+    public ResponseEntity<Response> addPost(PostRequest postRequest, HttpSession session) {
 
         HashMap<String, String> errors = new HashMap<>();
 
-        String timestamp = addPostRequest.getTimestamp();
-        int active = addPostRequest.getActive();
-        String title = addPostRequest.getTitle();
-        String text = addPostRequest.getText();
-        List<String> tags = addPostRequest.getTags();
+        String timestamp = postRequest.getTimestamp();
+        boolean isActive = postRequest.getActive() == 1;
+        String title = postRequest.getTitle();
+        String text = postRequest.getText();
+        List<String> tags = postRequest.getTags();
+        ModerationStatus moderationStatus = ModerationStatus.NEW;
 
         boolean isTitleValid = isPostTextValid(title, postTitleMinLength);
         boolean isTextValid = isPostTextValid(text, postTextMinLength);
 
         if (!isTitleValid || !isTextValid) {
             if (!isTitleValid) {
-                log.info("Заголовок не установлен или слишком короткий (минимальная длина - " + postTitleMinLength + " символа");
-                errors.put("text", "Заголовок не установлен или слишком короткий (минимальная длина - " + postTitleMinLength + " символа");
+                log.info("Заголовок не установлен или слишком короткий (минимальная длина - " + postTitleMinLength + " символа)");
+                errors.put("title", "Заголовок не установлен или слишком короткий (минимальная длина - " + postTitleMinLength + " символа)");
             }
-            if (!isTitleValid) {
-                log.info("Текст публикации не установлен или слишком короткий (минимальная длина - " + postTextMinLength + " символа");
-                errors.put("text", "Текст публикации не установлен или слишком короткий (минимальная длина - " + postTextMinLength + " символа");
+            if (!isTextValid) {
+                log.info("Текст публикации не установлен или слишком короткий (минимальная длина - " + postTextMinLength + " символов)");
+                errors.put("text", "Текст публикации не установлен или слишком короткий (минимальная длина - " + postTextMinLength + " символов)");
             }
             return new ResponseEntity<>(new BadRequestMessageResponse(errors), HttpStatus.OK);
         }
-        if (!isPostTimeValid(timestamp)) {
 
+        LocalDateTime time = getTimeForPost(timestamp);
+
+        User user = userService.getUserBySession(session);
+        if (user == null) {
+            log.warn("Не найден пользователь для сессии с ID=" + session.getId());
+            errors.put("session", "Пользователь для сессии с ID=" + session.getId() + " не найден");
+            return new ResponseEntity<>(new BadRequestMessageResponse(errors), HttpStatus.BAD_REQUEST);
+        }
+
+        if (user.isModerator() == 1 || (user.isModerator() == 0 && !globalSettingService.getGlobalSettingValue("POST_PREMODERATION"))) {
+            moderationStatus = ModerationStatus.ACCEPTED;
+        }
+
+        Post post = new Post(isActive, moderationStatus, null, time, title, text, 0, user);
+        postRepository.save(post);
+        log.info(moderationStatus == ModerationStatus.ACCEPTED ? "Опубликован новый пост с ID=" + post.getId() : "Создан неопубликованный пост с ID=" + post.getId());
+
+        if (!tags.isEmpty() && tags.size() > 0)  {
+            tagService.addNewTagsByPost(tags, post);
+        }
+        return new ResponseEntity<>(new BooleanResponse(true), HttpStatus.OK);
+    }
+
+    public ResponseEntity<Response> editPost(Integer id, PostRequest postRequest, HttpSession session) {
+
+        HashMap<String, String> errors = new HashMap<>();
+
+        String timestamp = postRequest.getTimestamp();
+        boolean isActive = postRequest.getActive() == 1;
+        String title = postRequest.getTitle();
+        String text = postRequest.getText();
+        List<String> tags = postRequest.getTags();
+        Post post = postRepository.findById(id).orElse(null);
+
+        if (post == null) {
+            log.warn("Не найден пост с ID=" + id);
+            errors.put("post", "Пост не найден");
+            return new ResponseEntity<>(new BadRequestMessageResponse(errors), HttpStatus.BAD_REQUEST);
+        }
+
+        boolean isTitleValid = isPostTextValid(title, postTitleMinLength);
+        boolean isTextValid = isPostTextValid(text, postTextMinLength);
+
+        if (!isTitleValid || !isTextValid) {
+            if (!isTitleValid) {
+                log.info("Заголовок не установлен или слишком короткий (минимальная длина - " + postTitleMinLength + " символа)");
+                errors.put("title", "Заголовок не установлен или слишком короткий (минимальная длина - " + postTitleMinLength + " символа)");
+            }
+            if (!isTextValid) {
+                log.info("Текст публикации не установлен или слишком короткий (минимальная длина - " + postTextMinLength + " символов)");
+                errors.put("text", "Текст публикации не установлен или слишком короткий (минимальная длина - " + postTextMinLength + " символов)");
+            }
+            return new ResponseEntity<>(new BadRequestMessageResponse(errors), HttpStatus.BAD_REQUEST);
+        }
+
+        LocalDateTime time = LocalDateTime.ofEpochSecond(Long.parseLong(timestamp), 0, ZoneOffset.UTC);
+
+        if (!isPostTimeValid(timestamp)) {
+            log.warn("Ошибка! Время публикации поста раньше чем текущее время");
+            time = LocalDateTime.now();
+            log.info("Время публикации поста изменено на " + time);
         }
 
         User user = userService.getUserBySession(session);
@@ -394,9 +463,38 @@ public class PostService {
             return new ResponseEntity<>(new BadRequestMessageResponse(errors), HttpStatus.BAD_REQUEST);
         }
 
+        if (post.getUser() != user) {
+            log.warn("Пользователь с ID=" + user.getId() + " не может редактировать пост с ID=" + post.getId() + " , т.к. не является его автором");
+            errors.put("user", "Пользователь не является автором поста");
+            return new ResponseEntity<>(new BadRequestMessageResponse(errors), HttpStatus.BAD_REQUEST);
+        }
 
+        ModerationStatus moderationStatus = post.getModerationStatus();
 
-        return null;
+        if (post.getUser() == user && globalSettingService.getGlobalSettingValue("POST_PREMODERATION") && user.isModerator() == 0) {
+            moderationStatus = ModerationStatus.NEW;
+        }
+
+        post.setActive(isActive);
+        post.setModerationStatus(moderationStatus);
+        post.setTime(time);
+        post.setTitle(title);
+        post.setText(text);
+        postRepository.save(post);
+        log.info("Данные поста с ID=" + post.getId() + "успешно изменены на {" +
+                "is_active: " + post.isActive() + ", " +
+                "moderation_status: " + post.getModerationStatus() + ", " +
+                "time: " + post.getTime() + ", " +
+                "title: " + post.getTitle() + ", " +
+                "text: " + post.getText() + "}");
+
+        tagToPostService.deleteTagToPostByPost(post);
+        if (!tags.isEmpty() && tags.size() > 0) {
+            tagService.addNewTagsByPost(tags, post);
+        }
+
+        return new ResponseEntity<>(new BooleanResponse(true), HttpStatus.OK);
+
     }
 
     private boolean isPostTextValid(String text, int minLength) {
@@ -407,15 +505,26 @@ public class PostService {
     }
 
     private boolean isPostTimeValid(String time) {
+        LocalDateTime ldt = LocalDateTime.ofEpochSecond(Long.valueOf(time), 0, ZoneOffset.UTC);
         if (time == null ||
                 time.isBlank() ||
                 time.equals("") ||
-                time.equals(String.valueOf(LocalDateTime.now().atZone(ZoneOffset.UTC).toInstant().toEpochMilli() / 1000))
+                ldt.isBefore(LocalDateTime.now())
         ) {
             return false;
         }
         return true;
     }
 
+    private LocalDateTime getTimeForPost(String timestamp) {
+        LocalDateTime time = LocalDateTime.ofEpochSecond(Long.parseLong(timestamp), 0, ZoneOffset.UTC);
 
+        if (!isPostTimeValid(timestamp)) {
+            log.warn("Ошибка! Время публикации поста раньше чем текущее время");
+            time = LocalDateTime.now();
+            log.info("Время публикации поста изменено на " + time);
+        }
+
+        return time;
+    }
 }

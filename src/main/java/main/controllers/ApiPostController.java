@@ -1,7 +1,7 @@
 package main.controllers;
 
 import lombok.extern.slf4j.Slf4j;
-import main.api.request.PostAddPostRequest;
+import main.api.request.PostRequest;
 import main.api.response.Response;
 import main.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -103,14 +103,26 @@ public class ApiPostController {
 
     @PostMapping(value = "post")
     @PreAuthorize("hasAuthority('user:write')")
-    public ResponseEntity<Response> addPost(@RequestBody PostAddPostRequest addPostRequest, HttpServletRequest request) {
-        log.info("Отправлен POST запрос на /api/auth/login со следующими параметрами: {" +
-                "TimeStamp: " + addPostRequest.getTimestamp() + ", " +
-                "Active: " + addPostRequest.getActive() + ", " +
-                "Title: " + addPostRequest.getActive() + ", " +
-                "Text: " + addPostRequest.getActive() + ", " +
-                "Tags: " + Arrays.toString(addPostRequest.getTags().toArray()) + "}");
-        return null;
+    public ResponseEntity<Response> addPost(@RequestBody PostRequest postRequest, HttpServletRequest request) {
+        log.info("Отправлен POST запрос на /api/post со следующими параметрами: {" +
+                "TimeStamp: " + postRequest.getTimestamp() + ", " +
+                "Active: " + postRequest.getActive() + ", " +
+                "Title: " + postRequest.getActive() + ", " +
+                "Text: " + postRequest.getActive() + ", " +
+                "Tags: " + Arrays.toString(postRequest.getTags().toArray()) + "}");
+        return postService.addPost(postRequest, request.getSession());
+    }
+
+    @PutMapping(value = "post/{id}")
+    @PreAuthorize("hasAuthority('user:write')")
+    public ResponseEntity<Response> editPost(@PathVariable Integer id, @RequestBody PostRequest postRequest, HttpServletRequest request) {
+        log.info("Отправлен POST запрос на /api/post/{ID} со следующими параметрами: {" +
+                "TimeStamp: " + postRequest.getTimestamp() + ", " +
+                "Active: " + postRequest.getActive() + ", " +
+                "Title: " + postRequest.getActive() + ", " +
+                "Text: " + postRequest.getActive() + ", " +
+                "Tags: " + Arrays.toString(postRequest.getTags().toArray()) + "}");
+        return postService.editPost(id, postRequest, request.getSession());
     }
 
 }
