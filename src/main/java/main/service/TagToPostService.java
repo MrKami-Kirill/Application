@@ -1,5 +1,6 @@
 package main.service;
 
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import main.model.entity.Post;
 import main.model.entity.TagToPost;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
+@Data
 public class TagToPostService {
 
     @Autowired

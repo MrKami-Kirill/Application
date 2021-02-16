@@ -8,10 +8,8 @@ import main.service.PostService;
 import main.service.TagService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(value = "/api/")
@@ -31,19 +29,19 @@ public class ApiGeneralController {
     }
 
     @GetMapping(value = "settings")
-    private ResponseEntity<Response> settings() {
+    public ResponseEntity<Response> settings() {
         log.info("Отправлен GET запрос на /api/settings");
         return globalSettingService.getGlobalSettingsResponse();
     }
 
     @GetMapping(value = "init")
-    private GetInitResponse init() {
+    public GetInitResponse init() {
         log.info("Отправлен GET запрос на /api/init");
         return getInitResponse;
     }
 
     @GetMapping(value = "tag", params = {"query"})
-    private ResponseEntity<Response> getTags(@RequestParam(value = "query") String query) {
+    public ResponseEntity<Response> getTags(@RequestParam(value = "query") String query) {
         log.info("Отправлен GET запрос на /api/tag со следующими параметрами: {" +
                 "Query: " + query + "}");
         return tagService.getTags(query);
@@ -51,7 +49,7 @@ public class ApiGeneralController {
 
     @GetMapping(value = "tag")
 
-    private ResponseEntity<Response> getAllTags() {
+    public ResponseEntity<Response> getAllTags() {
         log.info("Отправлен GET запрос на /api/tag");
         return tagService.getAllTags();
     }
@@ -61,5 +59,11 @@ public class ApiGeneralController {
         log.info("Отправлен GET запрос на /api/calendar со следующими параметрами: {" +
                 "Year: " + year + "}");
         return postService.getAllPostsByCalendar(year);
+    }
+
+    @PostMapping(value = "image")
+    @PreAuthorize("hasAuthority('user:write')")
+    public ResponseEntity<Response> uploadImage() {
+        return null;
     }
 }

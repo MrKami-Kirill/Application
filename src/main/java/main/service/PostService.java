@@ -6,7 +6,6 @@ import main.api.request.PostRequest;
 import main.api.response.*;
 import main.model.ModerationStatus;
 import main.model.entity.Post;
-import main.model.entity.TagToPost;
 import main.model.entity.User;
 import main.model.repositories.PostRepository;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -5,7 +5,6 @@ import main.api.request.PostLoginRequest;
 import main.api.request.PostRegisterRequest;
 import main.api.response.*;
 import main.model.entity.User;
-import main.model.repositories.PostRepository;
 import main.model.repositories.UserRepository;
 import main.security.SecurityUser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,9 +37,6 @@ public class UserService implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private PostRepository postRepository;
 
     @Autowired
     private PostService postService;
@@ -124,11 +120,11 @@ public class UserService implements UserDetailsService {
             sessionMap.put(session.getId(), user.getId());
             int moderationCount = 0;
             if (user.isModerator() == 1) {
-                moderationCount = postRepository.countAllPostsForModeration();
+                moderationCount = postService.getPostRepository().countAllPostsForModeration();
                 log.info("Получено общее кол-во постов на сайте (" + moderationCount + "), требующих проверки модератором");
             }
             ResponseEntity<Response> response = new ResponseEntity<>(new GetLoginResponse(user, moderationCount), HttpStatus.OK);
-            log.info("Пользователь с ID=" + user.getId() + "успешно вошел на сайт. ID сессии: " + session.getId());
+            log.info("Пользователь с ID=" + user.getId() + " успешно вошел на сайт. ID сессии: " + session.getId());
             return response;
 
         } catch (Exception ex) {

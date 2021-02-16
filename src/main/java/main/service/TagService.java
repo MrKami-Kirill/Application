@@ -6,9 +6,7 @@ import main.api.response.GetTagResponse;
 import main.model.entity.Post;
 import main.model.entity.Tag;
 import main.model.entity.TagToPost;
-import main.model.repositories.PostRepository;
 import main.model.repositories.TagRepository;
-import main.model.repositories.TagToPostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +16,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -28,10 +25,10 @@ public class TagService {
     private TagRepository tagRepository;
 
     @Autowired
-    private PostRepository postRepository;
+    private PostService postService;
 
     @Autowired
-    private TagToPostRepository tagToPostRepository;
+    private TagToPostService tagToPostService;
 
     public ResponseEntity<Response> getTags(String query) {
         if (query == null || query.equals("") || query.isBlank()) {
@@ -56,12 +53,12 @@ public class TagService {
         if (!tags.isEmpty()) {
             Integer maxTagCount = tagRepository.getMaxTagCount();
             log.info("Получен вес (" + maxTagCount + ") для самого популярного тега на сайте");
-            Integer countAllPosts = postRepository.countAllPosts();
+            Integer countAllPosts = postService.getPostRepository().countAllPosts();
             log.info("Получено общее кол-во публикаций на сайте (" + countAllPosts + ")");
             Double k = 1 / ((double) maxTagCount / (double) countAllPosts);
             log.info("Получен коэффициент нормализации k=" + k);
             for (Tag tag : tags) {
-                Double weight = (double) postRepository.countAllPostsByTagId(tag.getId()) / (double) countAllPosts;
+                Double weight = (double) postService.getPostRepository().countAllPostsByTagId(tag.getId()) / (double) countAllPosts;
                 log.info("Получен вес (" + weight + ") для тега '" + tag.getName() + "'");
                 Double normalWeight = Math.round(weight * k * 100.0) / 100.0;
                 log.info("Получен нормированный вес (" + normalWeight + ") для тега '" + tag.getName() + "'");
@@ -124,7 +121,7 @@ public class TagService {
 
         for (Tag tag : tagRepository.findAll()) {
             if (newTagNameUpperList.contains(tag.getName().toUpperCase(Locale.ROOT).trim())) {
-                tagToPostRepository.save(new TagToPost(tag, newPost));
+                tagToPostService.getTagToPostRepository().save(new TagToPost(tag, newPost));
                 log.info("Пост с ID=" + newPost.getId() + " связан с тегом '" + tag.getName() + "'");
             }
         }

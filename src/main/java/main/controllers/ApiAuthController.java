@@ -29,20 +29,20 @@ public class ApiAuthController {
 
 
     @GetMapping(value = "check")
-    private ResponseEntity<Response> checkAuth(Principal principal
+    public ResponseEntity<Response> checkAuth(Principal principal
     ) {
         log.info("Отправлен GET запрос на /api/auth/check");
         return userService.checkAuth(principal);
     }
 
     @GetMapping(value = "captcha")
-    private ResponseEntity<Response> getCaptcha() {
+    public ResponseEntity<Response> getCaptcha() {
         log.info("Отправлен GET запрос на /api/auth/captcha");
         return captchaCodeService.getCaptcha();
     }
 
     @PostMapping(value = "register")
-    private ResponseEntity<Response> register(@RequestBody PostRegisterRequest registerRequest) {
+    public ResponseEntity<Response> register(@RequestBody PostRegisterRequest registerRequest) {
         log.info("Отправлен POST запрос на /api/auth/register со следующими параметрами: {" +
                 "Email: " + registerRequest.getEmail() + ", " +
                 "Name: " + registerRequest.getName() + ", " +
@@ -54,7 +54,7 @@ public class ApiAuthController {
     }
 
     @PostMapping(value = "login")
-    private ResponseEntity<Response> login(@RequestBody PostLoginRequest loginRequest, HttpServletRequest request) {
+    public ResponseEntity<Response> login(@RequestBody PostLoginRequest loginRequest, HttpServletRequest request) {
         log.info("Отправлен POST запрос на /api/auth/login со следующими параметрами: {" +
                 "Email: " + loginRequest.getEmail() + ", " +
                 "Password: " + loginRequest.getPassword() + "}");
@@ -62,7 +62,7 @@ public class ApiAuthController {
     }
 
     @GetMapping(value = "logout")
-    private ResponseEntity<Response> logout(Principal principal, HttpServletRequest request) {
+    public ResponseEntity<Response> logout(Principal principal, HttpServletRequest request) {
         log.info("Отправлен POST запрос на /api/auth/logout с ID сессии: " + request.getSession().getId());
         return userService.logout(principal, request.getSession());
     }
