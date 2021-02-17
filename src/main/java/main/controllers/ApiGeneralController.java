@@ -1,15 +1,18 @@
 package main.controllers;
 
 import lombok.extern.slf4j.Slf4j;
+import main.api.request.PostCommentRequest;
 import main.api.response.GetInitResponse;
 import main.api.response.Response;
-import main.service.GlobalSettingService;
-import main.service.PostService;
-import main.service.TagService;
+import main.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping(value = "/api/")
@@ -24,6 +27,10 @@ public class ApiGeneralController {
     private TagService tagService;
     @Autowired
     private PostService postService;
+    @Autowired
+    private FileService uploadFileService;
+    @Autowired
+    private PostCommentService postCommentService;
 
     public ApiGeneralController() {
     }
@@ -61,9 +68,16 @@ public class ApiGeneralController {
         return postService.getAllPostsByCalendar(year);
     }
 
-    @PostMapping(value = "image")
+    @PostMapping(value = "image", produces = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('user:write')")
-    public ResponseEntity<Response> uploadImage() {
-        return null;
+    public ResponseEntity<?> uploadImage(@RequestParam(value = "file") MultipartFile file, HttpServletRequest request) {
+        log.info("Отправлен POST запрос на /api/image");
+        return uploadFileService.uploadFile(file, request.getSession());
+    }
+
+    @PostMapping(value = "comment")
+    @PreAuthorize("hasAuthority('user:write')")
+    public ResponseEntity<Response> addComment(@RequestBody PostCommentRequest commentRequest, HttpServletRequest request) {
+        return postCommentService.addComment(commentRequest, request.getSession());
     }
 }

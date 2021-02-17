@@ -42,6 +42,25 @@ public class PostComment implements Serializable {
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Post post;
 
+    public PostComment() {
+    }
+
+    public PostComment(@NotNull LocalDateTime time, @NotNull String text, User user, Post post) {
+        this.time = time;
+        this.text = text;
+        this.parentId = null;
+        this.user = user;
+        this.post = post;
+    }
+
+    public PostComment(@NotNull LocalDateTime time, @NotNull String text, PostComment parentId, User user, Post post) {
+        this.time = time;
+        this.text = text;
+        this.parentId = parentId;
+        this.user = user;
+        this.post = post;
+    }
+
     public int getId() {
         return id;
     }

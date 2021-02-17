@@ -47,3 +47,11 @@ user:
   password:
     length: 6
 
+image:
+  root_dir: upload
+  format: jpg
+  max_size: 10000000 #bytes = 10Mb
+
+post_comment:
+  min_length: 3
+
