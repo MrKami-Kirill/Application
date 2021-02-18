@@ -1,10 +1,9 @@
 package main.controllers;
 
 
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import main.api.request.PostLoginRequest;
-import main.api.request.PostRegisterRequest;
+import main.api.request.LoginRequest;
+import main.api.request.RegisterRequest;
 import main.api.response.Response;
 import main.service.CaptchaCodeService;
 import main.service.UserService;
@@ -16,8 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
 
 @RestController
-@RequestMapping(value = "/api/auth/")
-@Data
+@RequestMapping(value = "/api/auth")
 @Slf4j
 public class ApiAuthController {
     
@@ -28,21 +26,21 @@ public class ApiAuthController {
     private CaptchaCodeService captchaCodeService;
 
 
-    @GetMapping(value = "check")
+    @GetMapping(value = "/check")
     public ResponseEntity<Response> checkAuth(Principal principal
     ) {
         log.info("Отправлен GET запрос на /api/auth/check");
         return userService.checkAuth(principal);
     }
 
-    @GetMapping(value = "captcha")
+    @GetMapping(value = "/captcha")
     public ResponseEntity<Response> getCaptcha() {
         log.info("Отправлен GET запрос на /api/auth/captcha");
         return captchaCodeService.getCaptcha();
     }
 
-    @PostMapping(value = "register")
-    public ResponseEntity<Response> register(@RequestBody PostRegisterRequest registerRequest) {
+    @PostMapping(value = "/register")
+    public ResponseEntity<Response> register(@RequestBody RegisterRequest registerRequest) {
         log.info("Отправлен POST запрос на /api/auth/register со следующими параметрами: {" +
                 "Email: " + registerRequest.getEmail() + ", " +
                 "Name: " + registerRequest.getName() + ", " +
@@ -53,15 +51,15 @@ public class ApiAuthController {
 
     }
 
-    @PostMapping(value = "login")
-    public ResponseEntity<Response> login(@RequestBody PostLoginRequest loginRequest, HttpServletRequest request) {
+    @PostMapping(value = "/login")
+    public ResponseEntity<Response> login(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
         log.info("Отправлен POST запрос на /api/auth/login со следующими параметрами: {" +
                 "Email: " + loginRequest.getEmail() + ", " +
                 "Password: " + loginRequest.getPassword() + "}");
         return userService.login(loginRequest, request.getSession());
     }
 
-    @GetMapping(value = "logout")
+    @GetMapping(value = "/logout")
     public ResponseEntity<Response> logout(Principal principal, HttpServletRequest request) {
         log.info("Отправлен POST запрос на /api/auth/logout с ID сессии: " + request.getSession().getId());
         return userService.logout(principal, request.getSession());

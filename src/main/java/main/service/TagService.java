@@ -2,7 +2,7 @@ package main.service;
 
 import lombok.extern.slf4j.Slf4j;
 import main.api.response.Response;
-import main.api.response.GetTagResponse;
+import main.api.response.TagResponse;
 import main.model.entity.Post;
 import main.model.entity.Tag;
 import main.model.entity.TagToPost;
@@ -53,18 +53,18 @@ public class TagService {
         if (!tags.isEmpty()) {
             Integer maxTagCount = tagRepository.getMaxTagCount();
             log.info("Получен вес (" + maxTagCount + ") для самого популярного тега на сайте");
-            Integer countAllPosts = postService.getPostRepository().countAllPosts();
+            Integer countAllPosts = postService.countAllPosts();
             log.info("Получено общее кол-во публикаций на сайте (" + countAllPosts + ")");
             Double k = 1 / ((double) maxTagCount / (double) countAllPosts);
             log.info("Получен коэффициент нормализации k=" + k);
             for (Tag tag : tags) {
-                Double weight = (double) postService.getPostRepository().countAllPostsByTagId(tag.getId()) / (double) countAllPosts;
+                Double weight = (double) postService.countAllPostsByTagId(tag.getId()) / (double) countAllPosts;
                 log.info("Получен вес (" + weight + ") для тега '" + tag.getName() + "'");
                 Double normalWeight = Math.round(weight * k * 100.0) / 100.0;
                 log.info("Получен нормированный вес (" + normalWeight + ") для тега '" + tag.getName() + "'");
                 responseMap.put(tag.getName(), normalWeight);
             }
-            ResponseEntity<Response> response = new ResponseEntity<>(new GetTagResponse(responseMap), HttpStatus.OK);
+            ResponseEntity<Response> response = new ResponseEntity<>(new TagResponse(responseMap), HttpStatus.OK);
             log.info("Направляем ответ " + (response.getBody() == null ? "с пустым телом"
                     : "с тегами: " + response.getBody().toString()));
             return response;

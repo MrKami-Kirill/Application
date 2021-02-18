@@ -1,8 +1,8 @@
 package main.service;
 
 import lombok.extern.slf4j.Slf4j;
-import main.api.request.PostLoginRequest;
-import main.api.request.PostRegisterRequest;
+import main.api.request.LoginRequest;
+import main.api.request.RegisterRequest;
 import main.api.response.*;
 import main.model.entity.User;
 import main.model.repositories.UserRepository;
@@ -33,6 +33,9 @@ public class UserService implements UserDetailsService {
     @Value("${user.password.length}")
     private int userPasswordLength;
 
+    @Value("${post.announce.max_length}")
+    private int announceLength;
+
     private Map<String, Integer> sessionMap = new HashMap<>();
 
     @Autowired
@@ -57,13 +60,13 @@ public class UserService implements UserDetailsService {
         }
         String email = principal.getName();
         User currentUser = getUserByEmail(email);
-        ResponseEntity<Response> response = new ResponseEntity<>(new AuthUserResponse(currentUser, postService.getAnnounceLength()), HttpStatus.OK);
+        ResponseEntity<Response> response = new ResponseEntity<>(new AuthUserResponse(currentUser, announceLength), HttpStatus.OK);
         log.info("Получен ответ на запрос /api/auth/check. Пользователь с email '" + email + "' успешно авторизован");
         return response;
 
     }
 
-    public ResponseEntity<Response> register(PostRegisterRequest registerRequest) {
+    public ResponseEntity<Response> register(RegisterRequest registerRequest) {
 
         if (!globalSettingService.getGlobalSettingValue("MULTIUSER_MODE")) {
             log.warn("Регистрация нового пользователя невозможна, т.к. глобаальная настройка сайта MULTIUSER_MODE включена");
@@ -109,7 +112,7 @@ public class UserService implements UserDetailsService {
 
     }
 
-    public ResponseEntity<Response> login(PostLoginRequest loginRequest, HttpSession session) {
+    public ResponseEntity<Response> login(LoginRequest loginRequest, HttpSession session) {
         String email = loginRequest.getEmail();
         String password = loginRequest.getPassword();
         try {
@@ -119,11 +122,11 @@ public class UserService implements UserDetailsService {
             User user = getUserByEmail(email);
             sessionMap.put(session.getId(), user.getId());
             int moderationCount = 0;
-            if (user.isModerator() == 1) {
-                moderationCount = postService.getPostRepository().countAllPostsForModeration();
+            if (user.getIsModerator() == 1) {
+                moderationCount = postService.countAllPostsForModeration();
                 log.info("Получено общее кол-во постов на сайте (" + moderationCount + "), требующих проверки модератором");
             }
-            ResponseEntity<Response> response = new ResponseEntity<>(new GetLoginResponse(user, moderationCount), HttpStatus.OK);
+            ResponseEntity<Response> response = new ResponseEntity<>(new LoginResponse(user, moderationCount), HttpStatus.OK);
             log.info("Пользователь с ID=" + user.getId() + " успешно вошел на сайт. ID сессии: " + session.getId());
             return response;
 

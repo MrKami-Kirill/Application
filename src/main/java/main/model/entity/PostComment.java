@@ -1,5 +1,9 @@
 package main.model.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -8,10 +12,8 @@ import java.util.Set;
 
 @Entity
 @Table(name = "post_comments")
-@NamedQueries({
-        @NamedQuery(name = "PostComment.findAll", query = "SELECT b FROM PostComment b")
-        , @NamedQuery(name = "PostComment.findById", query = "SELECT b FROM PostComment b WHERE b.id = :id")
-})
+@NoArgsConstructor
+@AllArgsConstructor
 public class PostComment implements Serializable {
 
     @Id
@@ -41,9 +43,6 @@ public class PostComment implements Serializable {
     @JoinColumn(name = "post_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "fk_post_comments_posts"))
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Post post;
-
-    public PostComment() {
-    }
 
     public PostComment(@NotNull LocalDateTime time, @NotNull String text, User user, Post post) {
         this.time = time;

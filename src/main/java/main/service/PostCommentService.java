@@ -39,7 +39,7 @@ public class PostCommentService {
 
     public ResponseEntity<Response> addComment(PostCommentRequest commentRequest, HttpSession session) {
 
-            HashMap<String, String> errors = new HashMap<>();
+        HashMap<String, String> errors = new HashMap<>();
 
         User user = userService.getUserBySession(session);
         if (user == null) {
@@ -57,7 +57,7 @@ public class PostCommentService {
         Post post = postService.getPostRepository().findById(postId).orElse(null);
         if (post == null) {
             log.warn("Ошибка! Пост с ID=" + postId + " не найден");
-            errors.put("ID", "Пост c ID=" + postId + " не найден");
+            errors.put("postId", "Пост c ID=" + postId + " не найден");
             return new ResponseEntity<>(new BadRequestMessageResponse(errors), HttpStatus.BAD_REQUEST);
         }
 

@@ -7,7 +7,7 @@ import com.github.cage.image.Painter;
 import com.github.cage.image.RgbColorGenerator;
 import com.github.cage.token.RandomTokenGenerator;
 import lombok.extern.slf4j.Slf4j;
-import main.api.response.GetCaptchaCodeResponse;
+import main.api.response.CaptchaCodeResponse;
 import main.api.response.Response;
 import main.model.entity.CaptchaCode;
 import main.model.repositories.CaptchaCodeRepository;
@@ -65,7 +65,7 @@ public class CaptchaCodeService {
         CaptchaCode captchaCode = new CaptchaCode(LocalDateTime.now(), token, secretCode);
         captchaCodeRepository.save(captchaCode);
         log.info("Создана новая запись в captcha_code с ID=" + captchaCode.getId());
-        ResponseEntity<Response> response = new ResponseEntity<>(new GetCaptchaCodeResponse(secretCode, captchaImageBase64), HttpStatus.OK);
+        ResponseEntity<Response> response = new ResponseEntity<>(new CaptchaCodeResponse(secretCode, captchaImageBase64), HttpStatus.OK);
         log.info("Направляем ответ на запрос /api/auth/captcha cо следующими параметрами: {" +
                 "HttpStatus: " + response.getStatusCode() + ", " +
                 response.getBody());

@@ -1,5 +1,8 @@
 package main.model.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -8,12 +11,8 @@ import java.util.Set;
 
 @Entity
 @Table(name = "users")
-@NamedQueries({
-        @NamedQuery(name = "User.findAll", query = "SELECT b FROM User b")
-        , @NamedQuery(name = "User.findById", query = "SELECT b FROM User b WHERE b.id = :id")
-        , @NamedQuery(name = "User.findByName", query = "SELECT b FROM User b WHERE b.name = :name")
-        , @NamedQuery(name = "User.findByEmail", query = "SELECT b FROM User b WHERE b.email = :email")
-})
+@NoArgsConstructor
+@AllArgsConstructor
 public class User implements Serializable {
     @Id
     @Column(name = "id")
@@ -28,7 +27,7 @@ public class User implements Serializable {
     @NotNull
     private LocalDateTime regTime;
 
-    @Column(name = "name", columnDefinition = "VARCHAR(255)", unique = true)
+    @Column(name = "name", columnDefinition = "VARCHAR(255)")
     @NotNull
     private String name;
 
@@ -59,9 +58,6 @@ public class User implements Serializable {
         return isModerator == 1 ? Role.MODERATOR : Role.USER;
     }
 
-    public User() {
-    }
-
     public User(@NotNull int isModerator, @NotNull LocalDateTime regTime, @NotNull String name, @NotNull String email, @NotNull String password) {
         this.isModerator = isModerator;
         this.regTime = regTime;
@@ -78,12 +74,12 @@ public class User implements Serializable {
         this.id = id;
     }
 
-    public int isModerator() {
+    public int getIsModerator() {
         return isModerator;
     }
 
-    public void setModerator(int moderator) {
-        isModerator = moderator;
+    public void setIsModerator(int isModerator) {
+        this.isModerator = isModerator;
     }
 
     public LocalDateTime getRegTime() {

@@ -1,5 +1,9 @@
 package main.model.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -7,10 +11,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "post_votes")
-@NamedQueries({
-        @NamedQuery(name = "PostVote.findAll", query = "SELECT b FROM PostVote b")
-        , @NamedQuery(name = "PostVote.findById", query = "SELECT b FROM PostVote b WHERE b.id = :id")
-})
+@NoArgsConstructor
+@AllArgsConstructor
 public class PostVote implements Serializable {
 
     @Id

@@ -2,6 +2,7 @@ package main.service;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import main.api.request.PostModerationRequest;
 import main.api.request.PostRequest;
 import main.api.response.*;
 import main.model.ModerationStatus;
@@ -10,11 +11,13 @@ import main.model.entity.User;
 import main.model.repositories.PostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpSession;
+import javax.validation.constraints.Positive;
 import java.sql.Date;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -92,7 +95,7 @@ public class PostService {
                     log.info("Получен список старых постов для отображения: " + Arrays.toString(posts.toArray()));
                     break;
             }
-            ResponseEntity<Response> response = new ResponseEntity<>(new GetPostsResponse(count, posts, announceLength), HttpStatus.OK);
+            ResponseEntity<Response> response = new ResponseEntity<>(new PostsResponse(count, posts, announceLength), HttpStatus.OK);
             log.info("Направляется ответ на запрос /api/post cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");
             return response;
         }
@@ -120,7 +123,7 @@ public class PostService {
                 log.info("Получено общее кол-во постов на сайте (" + count + ") по строке поиска '" + query + "'");
                 posts = postRepository.getAllPostsByQuery(query, offset, limit);
                 log.info("Получен список постов за по строке поиска '" + query + "' для отображения: " + Arrays.toString(posts.toArray()));
-                ResponseEntity<Response> response = new ResponseEntity<>(new GetPostsResponse(count, posts, announceLength), HttpStatus.OK);
+                ResponseEntity<Response> response = new ResponseEntity<>(new PostsResponse(count, posts, announceLength), HttpStatus.OK);
                 log.info("Направляется ответ на запрос /api/post/search cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");
                 return response;
             } else {
@@ -128,7 +131,7 @@ public class PostService {
                 log.info("Получено общее кол-во постов на сайте (" + count + ") без строки поиска");
                 posts = postRepository.getRecentPosts(offset, limit);
                 log.info("Получен список постов за без строки поиска для отображения: " + Arrays.toString(posts.toArray()));
-                ResponseEntity<Response> response = new ResponseEntity<>(new GetPostsResponse(count, posts, announceLength), HttpStatus.OK);
+                ResponseEntity<Response> response = new ResponseEntity<>(new PostsResponse(count, posts, announceLength), HttpStatus.OK);
                 log.info("Направляется ответ на запрос /api/post/search cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");
                 return response;
             }
@@ -148,7 +151,7 @@ public class PostService {
         }
         List<Integer> years = postRepository.getYearsWithAnyPosts();
         log.info("Получен список всех лет, за которые есть посты: " + Arrays.toString(years.toArray()));
-        ResponseEntity<Response> response = new ResponseEntity<>(new GetPostByCalendarResponse(years, postsMap), HttpStatus.OK);
+        ResponseEntity<Response> response = new ResponseEntity<>(new PostByCalendarResponse(years, postsMap), HttpStatus.OK);
         log.info("Направляется ответ на запрос /api/post/calendar cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");
         return response;
     }
@@ -175,7 +178,7 @@ public class PostService {
             log.info("Получено общее кол-во постов на сайте (" + count + ") за дату '" + date + "'");
             List<Post> posts = postRepository.getAllPostsByDate(date, offset, limit);
             log.info("Получен список постов за '" + date + "' для отображения: " + Arrays.toString(posts.toArray()));
-            ResponseEntity<Response> response = new ResponseEntity<>(new GetPostsResponse(count, posts, announceLength), HttpStatus.OK);
+            ResponseEntity<Response> response = new ResponseEntity<>(new PostsResponse(count, posts, announceLength), HttpStatus.OK);
             log.info("Направляется ответ на запрос /api/post/byDate cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");
             return response;
         }
@@ -203,7 +206,7 @@ public class PostService {
             log.info("Получено общее кол-во постов на сайте (" + count + ") по тегу '" + tag + "'");
             List<Post> posts = postRepository.getAllPostsByTag(tag, offset, limit);
             log.info("Получен список постов по тегу '" + tag + "' для отображения: " + Arrays.toString(posts.toArray()));
-            ResponseEntity<Response> response = new ResponseEntity<>(new GetPostsResponse(count, posts, announceLength), HttpStatus.OK);
+            ResponseEntity<Response> response = new ResponseEntity<>(new PostsResponse(count, posts, announceLength), HttpStatus.OK);
             log.info("Направляется ответ на запрос /api/post/byTag cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");
             return response;
         }
@@ -216,13 +219,13 @@ public class PostService {
         Post post = postRepository.findById(postId).orElse(null);
         if (post == null) {
             log.warn("Ошибка! Пост с ID=" + postId + " не найден");
-            errors.put("ID", "Пост c ID=" + postId + " не найден");
+            errors.put("postId", "Пост c ID=" + postId + " не найден");
             return new ResponseEntity<>(new BadRequestMessageResponse(errors), HttpStatus.BAD_REQUEST);
         }
         log.info("Получен пост с ID=" + post.getId());
 
         User user = userService.getUserBySession(session);
-        if (user == null || (post.getUser() != user && user.isModerator() == 1)) {
+        if (user == null || (post.getUser() != user && user.getIsModerator() == 1)) {
             if (!post.isActive() || (post.getModerationStatus() != ModerationStatus.ACCEPTED) || post.getTime().isAfter(LocalDateTime.now())) {
                 log.warn("Некорректный пост " + post.toString() + " для отображения пользователю");
                 if (!post.isActive()) {
@@ -242,7 +245,7 @@ public class PostService {
             log.info("Кол-во просмотров поста с ID=" + postId.toString() + " увеличено на 1. Итоговое кол-во просмотров " + totalViewCount);
         }
 
-        ResponseEntity<Response> response = new ResponseEntity<>(new GetFullPostResponse(post), HttpStatus.OK);
+        ResponseEntity<Response> response = new ResponseEntity<>(new FullPostResponse(post), HttpStatus.OK);
         log.info("Направляется ответ на запрос /api/post/{id} cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");
         return response;
     }
@@ -302,7 +305,7 @@ public class PostService {
                     log.info("Для пользователя с ID=" + userId + " получен список опубликованных постов для отображения: " + Arrays.toString(posts.toArray()));
                     break;
             }
-            ResponseEntity<Response> response = new ResponseEntity<>(new GetPostsResponse(count, posts, announceLength), HttpStatus.OK);
+            ResponseEntity<Response> response = new ResponseEntity<>(new PostsResponse(count, posts, announceLength), HttpStatus.OK);
             log.info("Направляется ответ на запрос /api/post/my cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");
             return response;
         }
@@ -329,7 +332,7 @@ public class PostService {
                 return new ResponseEntity<>(new BadRequestMessageResponse(errors), HttpStatus.BAD_REQUEST);
             }
 
-            if (moderator.isModerator() == 0) {
+            if (moderator.getIsModerator() == 0) {
                 log.info("Для данного действия пользователю c ID=" + moderator.getId() + " требуются права модератора");
                 errors.put("is_moderator", "Требуются права модератора");
                 return new ResponseEntity<>(new BadRequestMessageResponse(errors), HttpStatus.BAD_REQUEST);
@@ -360,7 +363,7 @@ public class PostService {
                     break;
             }
 
-            ResponseEntity<Response> response = new ResponseEntity<>(new GetPostsResponse(count, posts, announceLength), HttpStatus.OK);
+            ResponseEntity<Response> response = new ResponseEntity<>(new PostsResponse(count, posts, announceLength), HttpStatus.OK);
             log.info("Направляется ответ на запрос /api/post/moderation cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");
             return response;
         }
@@ -401,7 +404,7 @@ public class PostService {
             return new ResponseEntity<>(new BadRequestMessageResponse(errors), HttpStatus.BAD_REQUEST);
         }
 
-        if (user.isModerator() == 1 || (user.isModerator() == 0 && !globalSettingService.getGlobalSettingValue("POST_PREMODERATION"))) {
+        if (user.getIsModerator() == 1 || (user.getIsModerator() == 0 && !globalSettingService.getGlobalSettingValue("POST_PREMODERATION"))) {
             moderationStatus = ModerationStatus.ACCEPTED;
         }
 
@@ -470,7 +473,7 @@ public class PostService {
 
         ModerationStatus moderationStatus = post.getModerationStatus();
 
-        if (post.getUser() == user && globalSettingService.getGlobalSettingValue("POST_PREMODERATION") && user.isModerator() == 0) {
+        if (post.getUser() == user && globalSettingService.getGlobalSettingValue("POST_PREMODERATION") && user.getIsModerator() == 0) {
             moderationStatus = ModerationStatus.NEW;
         }
 
@@ -494,6 +497,53 @@ public class PostService {
 
         return new ResponseEntity<>(new BooleanResponse(true), HttpStatus.OK);
 
+    }
+
+    public ResponseEntity<Response> moderation(PostModerationRequest moderationRequest, HttpSession session) {
+        HashMap<String, String> errors = new HashMap<>();
+
+        int postId = moderationRequest.getPostId();
+        String decision = moderationRequest.getDecision();
+
+        User user = userService.getUserBySession(session);
+        if (user == null) {
+            log.warn("Не найден пользователь для сессии с ID=" + session.getId());
+            errors.put("session", "Пользователь для сессии с ID=" + session.getId() + " не найден");
+            return new ResponseEntity<>(new BadRequestMessageResponse(errors), HttpStatus.BAD_REQUEST);
+        }
+
+        Post post = postRepository.findById(postId).orElse(null);
+        if (post == null) {
+            log.warn("Ошибка! Пост с ID=" + postId + " не найден");
+            errors.put("postId", "Пост c ID=" + postId + " не найден");
+            return new ResponseEntity<>(new BadRequestMessageResponse(errors), HttpStatus.BAD_REQUEST);
+        }
+
+        ResponseEntity<Response> response = new ResponseEntity<>(new BooleanResponse(true), HttpStatus.OK);;
+
+        if (user.getIsModerator() == 1) {
+            switch (decision) {
+                case "accept":
+                    post.setModerationStatus(ModerationStatus.ACCEPTED);
+                    post.setModeratorId(user.getId());
+                    postRepository.save(post);
+                    log.info("Статус поста с ID=" + post.getId() + " изменился на 'ACCEPTED' модератором с ID=" + user.getId());
+                    break;
+                case "decline":
+                    post.setModerationStatus(ModerationStatus.DECLINED);
+                    post.setModeratorId(user.getId());
+                    postRepository.save(post);
+                    log.info("Статус поста с ID=" + post.getId() + " изменился на 'DECLINED' модератором с ID=" + user.getId());
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected value: " + decision);
+            }
+        } else {
+            log.warn("Утверждать или отклонять посты может только пользователь с правами модератора");
+            errors.put("moderator_id", "Пользователь '" + user.getName() + "' не является модератором");
+            return new ResponseEntity<>(new BadRequestMessageResponse(errors), HttpStatus.BAD_REQUEST);
+        }
+        return response;
     }
 
     private boolean isPostTextValid(String text, int minLength) {
@@ -525,5 +575,17 @@ public class PostService {
         }
 
         return time;
+    }
+
+    public int countAllPostsForModeration() {
+        return postRepository.countAllPostsForModeration();
+    }
+
+    public int countAllPosts() {
+        return postRepository.countAllPosts();
+    }
+
+    public int countAllPostsByTagId(int tagId) {
+        return postRepository.countAllPostsByTagId(tagId);
     }
 }

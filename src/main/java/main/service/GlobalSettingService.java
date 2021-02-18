@@ -2,7 +2,7 @@ package main.service;
 
 
 import lombok.extern.slf4j.Slf4j;
-import main.api.response.GetGlobalSettingResponse;
+import main.api.response.GlobalSettingResponse;
 import main.api.response.Response;
 import main.model.entity.GlobalSetting;
 import main.model.repositories.GlobalSettingRepository;
@@ -28,7 +28,7 @@ public class GlobalSettingService {
     private GlobalSettingRepository globalSettingRepository;
 
     public ResponseEntity<Response> getGlobalSettingsResponse() {
-        GetGlobalSettingResponse globalSettingResponse = new GetGlobalSettingResponse();
+        GlobalSettingResponse globalSettingResponse = new GlobalSettingResponse();
         List<GlobalSetting> globalSettings = globalSettingRepository.findAll();
         for (GlobalSetting setting : globalSettings) {
             switch (setting.getCode()) {

@@ -1,9 +1,13 @@
 package main.api.response;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import main.model.entity.User;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class AuthUserResponse implements Response  {
 
     private boolean result;
@@ -15,6 +19,8 @@ public class AuthUserResponse implements Response  {
     }
 
     @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
     static class LoginUser {
 
         private int id;
@@ -30,9 +36,9 @@ public class AuthUserResponse implements Response  {
             this.name = user.getName();
             this.photo = user.getPhoto();
             this.email = user.getEmail();
-            this.moderation = user.isModerator();
+            this.moderation = user.getIsModerator();
             this.moderationCount = moderationCount;
-            this.settings = user.isModerator();
+            this.settings = user.getIsModerator();
         }
 
     }

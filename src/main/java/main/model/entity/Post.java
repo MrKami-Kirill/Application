@@ -1,5 +1,9 @@
 package main.model.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import main.model.ModerationStatus;
 
 import javax.persistence.*;
@@ -10,10 +14,8 @@ import java.util.Set;
 
 @Entity
 @Table(name = "posts")
-@NamedQueries({
-        @NamedQuery(name = "Post.findAll", query = "SELECT b FROM Post b")
-        , @NamedQuery(name = "Post.findById", query = "SELECT b FROM Post b WHERE b.id = :id")
-})
+@NoArgsConstructor
+@AllArgsConstructor
 public class Post implements Serializable {
     @Id
     @Column(name = "id")
@@ -61,9 +63,6 @@ public class Post implements Serializable {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "post")
     private Set<PostComment> postComments;
 
-    public Post() {
-    }
-
     public Post(@NotNull boolean isActive,
                 @NotNull ModerationStatus moderationStatus,
                 Integer moderatorId,
@@ -80,9 +79,6 @@ public class Post implements Serializable {
         this.text = text;
         this.viewCount = viewCount;
         this.user = user;
-        this.tagToPosts = tagToPosts;
-        this.postVotes = postVotes;
-        this.postComments = postComments;
     }
 
 

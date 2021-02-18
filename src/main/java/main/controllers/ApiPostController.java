@@ -13,7 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 
 @RestController
-@RequestMapping(value = "/api/")
+@RequestMapping(value = "/api")
 @Slf4j
 public class ApiPostController {
     
@@ -23,7 +23,7 @@ public class ApiPostController {
     public ApiPostController() {
     }
 
-    @GetMapping(value = "post", params = {"offset", "limit", "mode"})
+    @GetMapping(value = "/post", params = {"offset", "limit", "mode"})
     public ResponseEntity<Response> getAllPosts(@RequestParam(value = "offset") int offset,
                                                 @RequestParam(value = "limit") int limit,
                                                 @RequestParam(value = "mode") String mode) {
@@ -34,7 +34,7 @@ public class ApiPostController {
         return postService.getAllPosts(offset, limit, mode);
     }
 
-    @GetMapping(value = "post/search", params = {"query", "offset", "limit"})
+    @GetMapping(value = "/post/search", params = {"query", "offset", "limit"})
     public ResponseEntity<Response> getAllPostsByQuery(@RequestParam(value = "query") String query,
                                                        @RequestParam(value = "offset") int offset,
                                                        @RequestParam(value = "limit") int limit) {
@@ -45,7 +45,7 @@ public class ApiPostController {
         return postService.getAllPostsByQuery(query, offset, limit);
     }
 
-    @GetMapping(value = "post/byDate", params = {"date", "offset", "limit"})
+    @GetMapping(value = "/post/byDate", params = {"date", "offset", "limit"})
     public ResponseEntity<Response> getAllPostsByDate(@RequestParam(value = "date") String date,
                                                       @RequestParam(value = "offset") int offset,
                                                       @RequestParam(value = "limit") int limit) {
@@ -56,7 +56,7 @@ public class ApiPostController {
         return postService.getAllPostsByDate(date, offset, limit);
     }
 
-    @GetMapping(value = "post/byTag", params = {"tag", "offset", "limit"})
+    @GetMapping(value = "/post/byTag", params = {"tag", "offset", "limit"})
     public ResponseEntity<Response> getAllPostsByTag(@RequestParam(value = "tag") String tag,
                                                       @RequestParam(value = "offset") int offset,
                                                       @RequestParam(value = "limit") int limit) {
@@ -67,7 +67,7 @@ public class ApiPostController {
         return postService.getAllPostsByTag(tag, offset, limit);
     }
 
-    @GetMapping(value = "post/{id}")
+    @GetMapping(value = "/post/{id}")
     public ResponseEntity<Response> getAllPostsByTag(@PathVariable Integer id, HttpServletRequest request) {
         log.info("Отправлен GET запрос на /api/{id} со следующими параметрами: {" +
                 "Id:" + id + "," +
@@ -75,7 +75,7 @@ public class ApiPostController {
         return postService.getPostById(id, request.getSession());
     }
 
-    @GetMapping(value = "post/my", params = {"status", "offset", "limit"})
+    @GetMapping(value = "/post/my", params = {"status", "offset", "limit"})
     @PreAuthorize("hasAuthority('user:write')")
     public ResponseEntity<Response> getMyPosts(@RequestParam(value = "status") String status,
                                                 @RequestParam(value = "offset") int offset,
@@ -88,7 +88,7 @@ public class ApiPostController {
         return postService.getMyPosts(status, offset, limit, request.getSession());
     }
 
-    @GetMapping(value = "post/moderation", params = {"status", "offset", "limit"})
+    @GetMapping(value = "/post/moderation", params = {"status", "offset", "limit"})
     @PreAuthorize("hasAuthority('user:moderate')")
     public ResponseEntity<Response> getAllModeratePosts(
                                                @RequestParam(value = "status") String status,
@@ -101,7 +101,7 @@ public class ApiPostController {
         return postService.getAllModeratePosts(status, offset, limit, request.getSession());
     }
 
-    @PostMapping(value = "post")
+    @PostMapping(value = "/post")
     @PreAuthorize("hasAuthority('user:write')")
     public ResponseEntity<Response> addPost(@RequestBody PostRequest postRequest, HttpServletRequest request) {
         log.info("Отправлен POST запрос на /api/post со следующими параметрами: {" +
@@ -113,7 +113,7 @@ public class ApiPostController {
         return postService.addPost(postRequest, request.getSession());
     }
 
-    @PutMapping(value = "post/{id}")
+    @PutMapping(value = "/post/{id}")
     @PreAuthorize("hasAuthority('user:write')")
     public ResponseEntity<Response> editPost(@PathVariable Integer id, @RequestBody PostRequest postRequest, HttpServletRequest request) {
         log.info("Отправлен POST запрос на /api/post/{ID} со следующими параметрами: {" +

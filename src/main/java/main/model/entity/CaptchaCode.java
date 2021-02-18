@@ -1,5 +1,9 @@
 package main.model.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -7,10 +11,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "captcha_codes")
-@NamedQueries({
-        @NamedQuery(name = "CaptchaCode.findAll", query = "SELECT b FROM CaptchaCode b")
-        , @NamedQuery(name = "CaptchaCode.findById", query = "SELECT b FROM CaptchaCode b WHERE b.id = :id")
-})
+@NoArgsConstructor
+@AllArgsConstructor
 public class CaptchaCode implements Serializable {
 
     @Id
@@ -29,9 +31,6 @@ public class CaptchaCode implements Serializable {
     @Column(name = "secret_code", columnDefinition = "TINYTEXT")
     @NotNull
     private String secretCode;
-
-    public CaptchaCode() {
-    }
 
     public CaptchaCode(@NotNull LocalDateTime time, @NotNull String code, @NotNull String secretCode) {
         this.time = time;

@@ -1,14 +1,16 @@
 package main.model.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import javax.persistence.*;
 import java.io.Serializable;
 
 @Entity
 @Table(name = "tag2post")
-@NamedQueries({
-        @NamedQuery(name = "TagToPost.findAll", query = "SELECT b FROM TagToPost b")
-        , @NamedQuery(name = "TagToPost.findById", query = "SELECT b FROM TagToPost b WHERE b.id = :id")
-})
+@NoArgsConstructor
+@AllArgsConstructor
 public class TagToPost implements Serializable {
 
     @Id
@@ -23,9 +25,6 @@ public class TagToPost implements Serializable {
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "post_id", nullable = false)
     private Post idPost;
-
-    public TagToPost() {
-    }
 
     public TagToPost(Tag idTag, Post idPost) {
         this.idTag = idTag;

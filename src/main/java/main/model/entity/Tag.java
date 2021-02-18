@@ -1,15 +1,17 @@
 package main.model.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Set;
 
 @Entity
 @Table(name = "tags")
-@NamedQueries({
-        @NamedQuery(name = "Tag.findAll", query = "SELECT b FROM Tag b")
-        , @NamedQuery(name = "Tag.findById", query = "SELECT b FROM Tag b WHERE b.id = :id")
-})
+@NoArgsConstructor
+@AllArgsConstructor
 public class Tag implements Serializable {
 
     @Id
@@ -20,17 +22,12 @@ public class Tag implements Serializable {
     @Column(name = "name", columnDefinition = "VARCHAR(25%)")
     private String name;
 
-    public Tag() {
-    }
-
     public Tag(String name) {
         this.name = name;
     }
 
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "idTag")
     private Set<TagToPost> tagToPosts;
-
-
 
     public int getId() {
         return id;
