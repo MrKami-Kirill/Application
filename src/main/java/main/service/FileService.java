@@ -39,14 +39,13 @@ public class FileService {
     private UserService userService;
 
 
-    public ResponseEntity<?> uploadFile(MultipartFile file, HttpSession session) {
+    public ResponseEntity<?> uploadFile(MultipartFile file, HttpSession session) throws Exception {
 
         HashMap<String, String> errors = new HashMap<>();
 
         if (file == null) {
             log.warn("Изображение для загрузки на сервер отсутствует");
-            errors.put("image", "Изображение для загрузки на сервер отсутствует");
-            return new ResponseEntity<>(new BadRequestMessageResponse(errors), HttpStatus.BAD_REQUEST);
+            throw new Exception("Изображение для загрузки на сервер отсутствует");
         }
 
         if (file.getSize() > maxSize) {
@@ -57,8 +56,7 @@ public class FileService {
         User user = userService.getUserBySession(session);
         if (user == null) {
             log.warn("Не найден пользователь для сессии с ID=" + session.getId());
-            errors.put("session", "Пользователь для сессии с ID=" + session.getId() + " не найден");
-            return new ResponseEntity<>(new BadRequestMessageResponse(errors), HttpStatus.BAD_REQUEST);
+            throw new Exception("Пользователь не найден");
         }
 
         if (!Files.exists(Path.of(rootDir))) {
@@ -103,8 +101,7 @@ public class FileService {
             log.info("Направляется ответ на запрос /api/image cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");
             return response;
         } else {
-            errors.put("image", "Директория '" + path + "' не создана");
-            return new ResponseEntity<>(new BadRequestMessageResponse(errors), HttpStatus.BAD_REQUEST);
+            throw new Exception("Директория '" + path + "' не создана");
         }
     }
 

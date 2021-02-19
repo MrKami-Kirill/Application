@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping(value = "/api")
@@ -70,21 +73,21 @@ public class ApiGeneralController {
 
     @PostMapping(value = "/image", produces = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('user:write')")
-    public ResponseEntity<?> uploadImage(@RequestParam(value = "file") MultipartFile file, HttpServletRequest request) {
+    public ResponseEntity<?> uploadImage(@RequestParam(value = "file") MultipartFile file, HttpServletRequest request) throws Exception {
         log.info("Отправлен POST запрос на /api/image");
         return uploadFileService.uploadFile(file, request.getSession());
     }
 
     @PostMapping(value = "/comment")
     @PreAuthorize("hasAuthority('user:write')")
-    public ResponseEntity<Response> addComment(@RequestBody PostCommentRequest commentRequest, HttpServletRequest request) {
+    public ResponseEntity<Response> addComment(@RequestBody PostCommentRequest commentRequest, HttpServletRequest request) throws Exception {
         log.info("Отправлен POST запрос на /api/comment");
         return postCommentService.addComment(commentRequest, request.getSession());
     }
 
     @PostMapping(value = "/moderation")
     @PreAuthorize("hasAuthority('user:moderate')")
-    public ResponseEntity<Response> moderation(@RequestBody PostModerationRequest moderationRequest, HttpServletRequest request) {
+    public ResponseEntity<Response> moderation(@RequestBody PostModerationRequest moderationRequest, HttpServletRequest request) throws Exception {
         log.info("Отправлен POST запрос на /api/moderation");
         return postService.moderation(moderationRequest, request.getSession());
     }

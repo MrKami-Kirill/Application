@@ -174,6 +174,6 @@ public class UserService implements UserDetailsService {
     }
 
     private User getUserByEmail(String email) {
-        return userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User '" + email + "' not found!"));
+        return userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("Пользователь с email: '" + email + "' не найден"));
     }
 }

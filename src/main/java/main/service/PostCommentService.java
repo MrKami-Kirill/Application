@@ -37,15 +37,14 @@ public class PostCommentService {
     @Autowired
     private PostService postService;
 
-    public ResponseEntity<Response> addComment(PostCommentRequest commentRequest, HttpSession session) {
+    public ResponseEntity<Response> addComment(PostCommentRequest commentRequest, HttpSession session) throws Exception {
 
         HashMap<String, String> errors = new HashMap<>();
 
         User user = userService.getUserBySession(session);
         if (user == null) {
             log.warn("Не найден пользователь для сессии с ID=" + session.getId());
-            errors.put("session", "Пользователь для сессии с ID=" + session.getId() + " не найден");
-            return new ResponseEntity<>(new BadRequestMessageResponse(errors), HttpStatus.BAD_REQUEST);
+            throw new Exception("Пользователь не найден");
         }
 
         Integer postId = commentRequest.getPostId();
@@ -57,8 +56,7 @@ public class PostCommentService {
         Post post = postService.getPostRepository().findById(postId).orElse(null);
         if (post == null) {
             log.warn("Ошибка! Пост с ID=" + postId + " не найден");
-            errors.put("postId", "Пост c ID=" + postId + " не найден");
-            return new ResponseEntity<>(new BadRequestMessageResponse(errors), HttpStatus.BAD_REQUEST);
+            throw new Exception("Пост не найден");
         }
 
         PostComment newPostComment;
@@ -74,8 +72,7 @@ public class PostCommentService {
                     response = new ResponseEntity<>(new PostCommentResponse(newPostComment), HttpStatus.OK);
                 } else {
                     log.warn("Ошибка! Родительский комментарий с ID=" + parentId + " не найден");
-                    errors.put("parentId", "Невозможно оставить комментарий к несуществующему комментарию");
-                    return new ResponseEntity<>(new BadRequestMessageResponse(errors), HttpStatus.BAD_REQUEST);
+                    throw new Exception("Невозможно оставить комментарий к несуществующему комментарию");
                 }
             } else {
                 newPostComment = new PostComment(LocalDateTime.now(), text, user, post);
