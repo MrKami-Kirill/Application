@@ -4,10 +4,12 @@ package main.controllers;
 import lombok.extern.slf4j.Slf4j;
 import main.api.request.LoginRequest;
 import main.api.request.RegisterRequest;
+import main.api.request.RestorePasswordRequest;
 import main.api.response.Response;
 import main.service.CaptchaCodeService;
 import main.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +19,7 @@ import java.security.Principal;
 @RestController
 @RequestMapping(value = "/api/auth")
 @Slf4j
+@ComponentScan("service")
 public class ApiAuthController {
     
     @Autowired
@@ -63,6 +66,13 @@ public class ApiAuthController {
     public ResponseEntity<Response> logout(Principal principal, HttpServletRequest request) {
         log.info("Отправлен POST запрос на /api/auth/logout с ID сессии: " + request.getSession().getId());
         return userService.logout(principal, request.getSession());
+    }
+
+    @PostMapping(value = "/restore")
+    public ResponseEntity<Response> restorePassword(@RequestBody RestorePasswordRequest passwordRequest) {
+        log.info("Отправлен POST запрос на /api/auth/restore со следующими параметрами: {" +
+                "Email: " + passwordRequest.getEmail()  + "}");
+        return userService.restorePassword(passwordRequest);
     }
 }
 

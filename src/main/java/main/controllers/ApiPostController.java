@@ -5,9 +5,9 @@ import main.api.request.PostRequest;
 import main.api.response.Response;
 import main.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -17,7 +17,7 @@ import java.util.Arrays;
 @RestController
 @RequestMapping(value = "/api")
 @Slf4j
-@Validated
+@ComponentScan("service")
 public class ApiPostController {
     
     @Autowired
@@ -71,7 +71,7 @@ public class ApiPostController {
     }
 
     @GetMapping(value = "/post/{id}")
-    public ResponseEntity<Response> getAllPostsByTag(@PathVariable Integer id, HttpServletRequest request) throws Exception {
+    public ResponseEntity<Response> getPostById(@PathVariable Integer id, HttpServletRequest request) throws Exception {
         log.info("Отправлен GET запрос на /api/{id} со следующими параметрами: {" +
                 "Id:" + id + "," +
                 "SessionId:" + request.getSession().getId() + "}");

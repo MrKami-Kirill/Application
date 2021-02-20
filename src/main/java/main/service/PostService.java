@@ -11,11 +11,10 @@ import main.model.entity.User;
 import main.model.repositories.PostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpSession;
 import java.sql.Date;
@@ -25,8 +24,8 @@ import java.util.*;
 
 
 @Service
-@Data
 @Slf4j
+@Data
 public class PostService {
 
     @Value("${post.announce.max_length}")
@@ -37,6 +36,12 @@ public class PostService {
 
     @Value("${post.text.min_length}")
     private int postTextMinLength;
+
+    @Value("${post.image.upload_dir}")
+    private String uploadDir;
+
+    @Value("${post.image.format}")
+    private String format;
 
     @Autowired
     private PostRepository postRepository;
@@ -53,6 +58,9 @@ public class PostService {
     @Autowired
     private TagToPostService tagToPostService;
 
+    @Autowired
+    private FileService fileService;
+
     public ResponseEntity<Response> getAllPosts(Integer  offset, Integer limit, String mode) {
 
         List<Post> posts;
@@ -60,19 +68,19 @@ public class PostService {
         log.info("Получено общее кол-во постов на сайте (" + count + ")");
         switch (mode.toLowerCase()) {
             case ("recent"):
-                posts = postRepository.getRecentPosts(PageRequest.of(offset, limit, Sort.by("time").descending()));
+                posts = postRepository.getRecentPosts(offset, limit);
                 log.info("Получен список новых постов для отображения: " + Arrays.toString(posts.toArray()));
                 break;
             case ("popular"):
-                posts = postRepository.getPopularPosts(PageRequest.of(offset, limit, Sort.by("post_counts").descending()));
+                posts = postRepository.getPopularPosts(offset, limit);
                 log.info("Получен список популярных постов для отображения: " + Arrays.toString(posts.toArray()));
                 break;
             case ("best"):
-                posts = postRepository.getBestPosts(PageRequest.of(offset, limit, Sort.by("sum_values").descending()));
+                posts = postRepository.getBestPosts(offset, limit);
                 log.info("Получен список самых обсуждаемых постов для отображения: " + Arrays.toString(posts.toArray()));
                 break;
             case ("early"):
-                posts = postRepository.getEarlyPosts(PageRequest.of(offset, limit, Sort.by("time").descending()));
+                posts = postRepository.getEarlyPosts(offset, limit);
                 log.info("Получен список старых постов для отображения: " + Arrays.toString(posts.toArray()));
                 break;
             default:
@@ -91,7 +99,7 @@ public class PostService {
         if (query != null && (query.trim().length() > 0)) {
             count = postRepository.countAllPostsByQuery(query);
             log.info("Получено общее кол-во постов на сайте (" + count + ") по строке поиска '" + query + "'");
-            posts = postRepository.getAllPostsByQuery(query, PageRequest.of(offset, limit, Sort.by("time").descending()));
+            posts = postRepository.getAllPostsByQuery(query, offset, limit);
             log.info("Получен список постов за по строке поиска '" + query + "' для отображения: " + Arrays.toString(posts.toArray()));
             ResponseEntity<Response> response = new ResponseEntity<>(new PostsResponse(count, posts, announceLength), HttpStatus.OK);
             log.info("Направляется ответ на запрос /api/post/search cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");
@@ -99,7 +107,7 @@ public class PostService {
         } else {
             count = postRepository.countAllPosts();
             log.info("Получено общее кол-во постов на сайте (" + count + ") без строки поиска");
-            posts = postRepository.getRecentPosts(PageRequest.of(offset, limit, Sort.by("time").descending()));
+            posts = postRepository.getRecentPosts(offset, limit);
             log.info("Получен список постов за без строки поиска для отображения: " + Arrays.toString(posts.toArray()));
             ResponseEntity<Response> response = new ResponseEntity<>(new PostsResponse(count, posts, announceLength), HttpStatus.OK);
             log.info("Направляется ответ на запрос /api/post/search cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");
@@ -128,7 +136,7 @@ public class PostService {
 
         int count = postRepository.countAllPostsByDate(date);
         log.info("Получено общее кол-во постов на сайте (" + count + ") за дату '" + date + "'");
-        List<Post> posts = postRepository.getAllPostsByDate(date, PageRequest.of(offset, limit, Sort.by("time").descending()));
+        List<Post> posts = postRepository.getAllPostsByDate(date, offset, limit);
         log.info("Получен список постов за '" + date + "' для отображения: " + Arrays.toString(posts.toArray()));
         ResponseEntity<Response> response = new ResponseEntity<>(new PostsResponse(count, posts, announceLength), HttpStatus.OK);
         log.info("Направляется ответ на запрос /api/post/byDate cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");
@@ -159,7 +167,7 @@ public class PostService {
         log.info("Получен пост с ID=" + post.getId());
 
         User user = userService.getUserBySession(session);
-        if (user == null || (post.getUser() != user && user.getIsModerator() == 1)) {
+        if (user == null || (post.getUser() != user && user.getIsModerator() == 0)) {
             if (!post.isActive() || (post.getModerationStatus() != ModerationStatus.ACCEPTED) || post.getTime().isAfter(LocalDateTime.now())) {
                 log.warn("Некорректный пост " + post.toString() + " для отображения пользователю");
                 if (!post.isActive()) {
@@ -198,25 +206,25 @@ public class PostService {
             case "inactive":
                 count = postRepository.countMyInActivePosts(userId);
                 log.info("Получено общее кол-во не опубликованных постов на сайте (" + count + ") для пользователя с ID=" + userId);
-                posts = postRepository.getMyInActivePosts(userId, PageRequest.of(offset, limit, Sort.by("time").descending()));
+                posts = postRepository.getMyInActivePosts(userId, offset, limit);
                 log.info("Для пользователя с ID=" + userId + " получен список не опубликованных постов для отображения: " + Arrays.toString(posts.toArray()));
                 break;
             case "pending":
                 count = postRepository.countMyPendingPosts(userId);
                 log.info("Получено общее кол-во постов, которые находятся на утверждение у модератора, на сайте (" + count + ") для пользователя с ID=" + userId);
-                posts = postRepository.getMyPendingPosts(userId, PageRequest.of(offset, limit, Sort.by("time").descending()));
+                posts = postRepository.getMyPendingPosts(userId, offset, limit);
                 log.info("Для пользователя с ID=" + userId + " получен список постов, которые находятся на утверждение у модератора, для отображения: " + Arrays.toString(posts.toArray()));
                 break;
             case "declined":
                 count = postRepository.countMyDeclinedPosts(userId);
                 log.info("Получено общее кол-во отклоненных постов на сайте (" + count + ") для пользователя с ID=" + userId);
-                posts = postRepository.getMyDeclinedPosts(userId, PageRequest.of(offset, limit, Sort.by("time").descending()));
+                posts = postRepository.getMyDeclinedPosts(userId, offset, limit);
                 log.info("Для пользователя с ID=" + userId + " получен список отклоненных постов для отображения: " + Arrays.toString(posts.toArray()));
                 break;
             case "published":
                 count = postRepository.countMyPublishedPosts(userId);
                 log.info("Получено общее кол-во опубликованных постов на сайте (" + count + ") для пользователя с ID=" + userId);
-                posts = postRepository.getMyPublishedPosts(userId, PageRequest.of(offset, limit, Sort.by("time").descending()));
+                posts = postRepository.getMyPublishedPosts(userId, offset, limit);
                 log.info("Для пользователя с ID=" + userId + " получен список опубликованных постов для отображения: " + Arrays.toString(posts.toArray()));
                 break;
             default:
@@ -246,19 +254,19 @@ public class PostService {
             case ("new"):
                 count = postRepository.countAllModeratePosts();
                 log.info("Получено общее кол-во постов на сайте (" + count + ") для модератора с ID=" + moderatorId);
-                posts = postRepository.getAllModeratePosts(PageRequest.of(offset, limit, Sort.by("time").descending()));
+                posts = postRepository.getAllModeratePosts(offset, limit);
                 log.info("Для модератора с ID=" + moderatorId + " получен список постов для отображения: " + Arrays.toString(posts.toArray()));
                 break;
             case ("declined"):
                 count = postRepository.countAllModeratePostsByMe("DECLINED", moderatorId);
                 log.info("Получено общее кол-во постов в статусе 'DECLINED' на сайте (" + count + ") для модератора с ID=" + moderatorId);
-                posts = postRepository.getAllModeratePostsByMe("DECLINED", moderatorId, PageRequest.of(offset, limit, Sort.by("time").descending()));
+                posts = postRepository.getAllModeratePostsByMe("DECLINED", moderatorId, offset, limit);
                 log.info("Для модератора с ID=" + moderatorId + " получен список постов в статусе 'DECLINED' для отображения: " + Arrays.toString(posts.toArray()));
                 break;
             case ("accepted"):
                 count = postRepository.countAllModeratePostsByMe("ACCEPTED", moderatorId);
                 log.info("Получено общее кол-во постов в статусе 'ACCEPTED' на сайте (" + count + ") для модератора с ID=" + moderatorId);
-                posts = postRepository.getAllModeratePostsByMe("ACCEPTED", moderatorId, PageRequest.of(offset, limit, Sort.by("time").descending()));
+                posts = postRepository.getAllModeratePostsByMe("ACCEPTED", moderatorId, offset, limit);
                 log.info("Для модератора с ID=" + moderatorId + " получен список постов в статусе 'ACCEPTED' для отображения: " + Arrays.toString(posts.toArray()));
                 break;
             default:
@@ -363,7 +371,7 @@ public class PostService {
             throw new Exception("Пользователь не найден");
         }
 
-        if (post.getUser() != user) {
+        if (post.getUser() != user && user.getIsModerator() == 0) {
             log.warn("Пользователь с ID=" + user.getId() + " не может редактировать пост с ID=" + post.getId() + " , т.к. не является его автором");
             errors.put("user", "Пользователь не является автором поста");
             throw  new Exception("Пользователь не является автором поста");
@@ -437,6 +445,25 @@ public class PostService {
             log.warn("Утверждать или отклонять посты может только пользователь с правами модератора");
             throw new Exception("Пользователь не является модератором");
         }
+        return response;
+    }
+
+    public ResponseEntity<?> uploadImage(MultipartFile file, HttpSession session) throws Exception {
+
+        if (file == null) {
+            log.warn("Изображение для загрузки на сервер отсутствует");
+            throw new Exception("Изображение для загрузки на сервер отсутствует");
+        }
+
+        User user = userService.getUserBySession(session);
+        if (user == null) {
+            log.warn("Не найден пользователь для сессии с ID=" + session.getId());
+            throw new Exception("Пользователь не найден");
+        }
+
+        String responsePath = fileService.createFile(uploadDir, format, file);
+        ResponseEntity<String> response = new ResponseEntity<>(responsePath, HttpStatus.OK);
+        log.info("Направляется ответ на запрос /api/image cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");
         return response;
     }
 

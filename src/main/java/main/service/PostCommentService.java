@@ -1,6 +1,5 @@
 package main.service;
 
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import main.api.request.PostCommentRequest;
 import main.api.response.BadRequestMessageResponse;
@@ -21,7 +20,6 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 
 @Service
-@Data
 @Slf4j
 public class PostCommentService {
 

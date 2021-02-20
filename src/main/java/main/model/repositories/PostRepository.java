@@ -2,6 +2,7 @@ package main.model.repositories;
 
 import main.model.entity.Post;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -93,34 +94,39 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
 
     @Query(value = "SELECT * FROM posts p WHERE p.is_active = 1 " +
             "AND p.moderation_status = 'ACCEPTED' " +
-            "AND p.time < NOW()", nativeQuery = true)
-    List<Post> getRecentPosts(PageRequest pageRequest);
+            "AND p.time < NOW() " +
+            "ORDER BY p.time DESC LIMIT ?2 OFFSET ?1", nativeQuery = true)
+    List<Post> getRecentPosts(Integer offset, Integer limit);
 
     @Query(value = "SELECT p.* FROM posts AS p " +
             "LEFT JOIN (SELECT post_id, COUNT(post_id) AS post_counts FROM post_comments GROUP BY post_id) AS popular_posts ON p.id = popular_posts.post_id " +
             "WHERE p.is_active = 1 " +
             "AND p.moderation_status = 'ACCEPTED' " +
-            "AND p.time < NOW()", nativeQuery = true)
-    List<Post> getPopularPosts(PageRequest pageRequest);
+            "AND p.time < NOW() " +
+            "ORDER BY p.time DESC LIMIT ?2 OFFSET ?1", nativeQuery = true)
+    List<Post> getPopularPosts(Integer offset, Integer limit);
 
     @Query(value = "SELECT p.* FROM posts AS p " +
             "LEFT JOIN (SELECT post_id, SUM(value) AS sum_values FROM post_votes GROUP BY post_id) AS best_posts ON p.id = best_posts.post_id " +
             "WHERE p.is_active = 1 " +
             "AND p.moderation_status = 'ACCEPTED' " +
-            "AND p.time < NOW()", nativeQuery = true)
-    List<Post> getBestPosts(PageRequest pageRequest);
+            "AND p.time < NOW() " +
+            "ORDER BY p.time DESC LIMIT ?2 OFFSET ?1", nativeQuery = true)
+    List<Post> getBestPosts(Integer offset, Integer limit);
 
     @Query(value = "SELECT * FROM posts p WHERE p.is_active = 1 " +
             "AND p.moderation_status = 'ACCEPTED' " +
-            "AND p.time < NOW()", nativeQuery = true)
-    List<Post> getEarlyPosts(PageRequest pageRequest);
+            "AND p.time < NOW() " +
+            "ORDER BY p.time DESC LIMIT ?2 OFFSET ?1", nativeQuery = true)
+    List<Post> getEarlyPosts(Integer offset, Integer limit);
 
     @Query(value = "SELECT DISTINCT * FROM posts p " +
-            "WHERE (p.text LIKE %?% OR p.title LIKE %?%) " +
+            "WHERE (p.text LIKE %?1% OR p.title LIKE %?1%) " +
             "AND p.is_active = 1 " +
             "AND p.moderation_status = 'ACCEPTED' " +
-            "AND p.time < NOW()", nativeQuery = true)
-    List<Post> getAllPostsByQuery(String query, PageRequest pageRequest);
+            "AND p.time < NOW() " +
+            "ORDER BY p.time DESC LIMIT ?3 OFFSET ?2", nativeQuery = true)
+    List<Post> getAllPostsByQuery(String query, Integer offset, Integer limit);
 
     @Query(value = "SELECT * FROM posts p  " +
             "WHERE YEAR(p.time) = ?", nativeQuery = true)
@@ -135,8 +141,9 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             "WHERE DATE(p.time) = ?1 " +
             "AND p.is_active = 1 " +
             "AND p.moderation_status = 'ACCEPTED' " +
-            "AND p.time < NOW()", nativeQuery = true)
-    List<Post> getAllPostsByDate(String date, PageRequest pageRequest);
+            "AND p.time < NOW() " +
+            "ORDER BY p.time DESC LIMIT ?3 OFFSET ?2", nativeQuery = true)
+    List<Post> getAllPostsByDate(String date, Integer offset, Integer limit);
 
     @Query(value = "SELECT * FROM posts p " +
             "LEFT JOIN tag2post t2p ON p.id = t2p.post_id " +
@@ -146,43 +153,47 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             "AND p.moderation_status = 'ACCEPTED' " +
             "AND p.time < NOW() " +
             "ORDER BY p.time DESC LIMIT ?3 OFFSET ?2", nativeQuery = true)
-    List<Post> getAllPostsByTag(String tag, Integer offset, Integer limit
-                                //PageRequest pageRequest
-                                );
+    List<Post> getAllPostsByTag(String tag, Integer offset, Integer limit);
 
     @Query(value = "SELECT * FROM posts p " +
             "WHERE p.is_active = 0 " +
-            "AND p.user_id = ?1", nativeQuery = true)
-    List<Post> getMyInActivePosts(Integer userId, PageRequest pageRequest);
+            "AND p.user_id = ?1 " +
+            "ORDER BY p.time DESC LIMIT ?3 OFFSET ?2", nativeQuery = true)
+    List<Post> getMyInActivePosts(Integer userId, Integer offset, Integer limit);
 
     @Query(value = "SELECT * FROM posts p " +
             "WHERE p.is_active = 1 " +
             "AND p.moderation_status = 'NEW' " +
-            "AND p.user_id = ?1", nativeQuery = true)
-    List<Post> getMyPendingPosts(Integer userId, PageRequest pageRequest);
+            "AND p.user_id = ?1 " +
+            "ORDER BY p.time DESC LIMIT ?3 OFFSET ?2", nativeQuery = true)
+    List<Post> getMyPendingPosts(Integer userId, Integer offset, Integer limit);
 
     @Query(value = "SELECT * FROM posts p " +
             "WHERE p.is_active = 1 " +
             "AND p.moderation_status = 'DECLINED' " +
-            "AND p.user_id = ?1", nativeQuery = true)
-    List<Post> getMyDeclinedPosts(Integer userId, PageRequest pageRequest);
+            "AND p.user_id = ?1 " +
+            "ORDER BY p.time DESC LIMIT ?3 OFFSET ?2", nativeQuery = true)
+    List<Post> getMyDeclinedPosts(Integer userId, Integer offset, Integer limit);
 
     @Query(value = "SELECT * FROM posts p " +
             "WHERE p.is_active = 1 " +
             "AND p.moderation_status = 'ACCEPTED' " +
-            "AND p.user_id = ?1", nativeQuery = true)
-    List<Post> getMyPublishedPosts(Integer userId, PageRequest pageRequest);
+            "AND p.user_id = ?1 " +
+            "ORDER BY p.time DESC LIMIT ?3 OFFSET ?2", nativeQuery = true)
+    List<Post> getMyPublishedPosts(Integer userId, Integer offset, Integer limit);
 
     @Query(value = "SELECT * FROM posts p " +
             "WHERE p.is_active = 1 " +
-            "AND p.moderation_status = 'NEW'", nativeQuery = true)
-    List<Post> getAllModeratePosts(PageRequest pageRequest);
+            "AND p.moderation_status = 'NEW' " +
+            "ORDER BY p.time DESC LIMIT ?2 OFFSET ?1", nativeQuery = true)
+    List<Post> getAllModeratePosts(Integer offset, Integer limit);
 
     @Query(value = "SELECT * FROM posts p " +
             "WHERE p.is_active = 1 " +
             "AND p.moderation_status = ?1 " +
             "AND p.moderator_id = ?2 " +
-            "AND p.moderator_id IS NOT NULL", nativeQuery = true)
-    List<Post> getAllModeratePostsByMe(String status, Integer moderatorId, PageRequest pageRequest);
+            "AND p.moderator_id IS NOT NULL " +
+            "ORDER BY p.time DESC LIMIT ?4 OFFSET ?3", nativeQuery = true)
+    List<Post> getAllModeratePostsByMe(String status, Integer moderatorId, Integer offset, Integer limit);
 
 }

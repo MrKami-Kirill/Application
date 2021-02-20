@@ -1,16 +1,19 @@
 package main.service;
 
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import main.api.request.LoginRequest;
-import main.api.request.RegisterRequest;
+import main.api.request.*;
 import main.api.response.*;
 import main.model.entity.User;
 import main.model.repositories.UserRepository;
 import main.security.SecurityUser;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -20,6 +23,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpSession;
 import java.security.Principal;
@@ -35,6 +39,27 @@ public class UserService implements UserDetailsService {
 
     @Value("${post.announce.max_length}")
     private int announceLength;
+
+    @Value("${user.image.max_size}")
+    private int maxPhotoSize;
+
+    @Value("${user.image.avatar_dir}")
+    private String avatarDir;
+
+    @Value("${user.image.format}")
+    private String format;
+
+    @Value("${user.password.restore.code.length}")
+    private int codeLength;
+
+    @Value("${user.password.restore.message.from}")
+    private String messageFrom;
+
+    @Value("${user.password.restore.message.subject}")
+    private String messageSubject;
+
+    @Value("${user.password.restore.message.link}")
+    private String messageLink;
 
     private Map<String, Integer> sessionMap = new HashMap<>();
 
@@ -52,6 +77,12 @@ public class UserService implements UserDetailsService {
 
     @Autowired
     private GlobalSettingService globalSettingService;
+
+    @Autowired
+    private FileService fileService;
+
+    @Autowired
+    private JavaMailSender mailSender;
 
     public ResponseEntity<Response> checkAuth(Principal principal) {
         if (principal == null) {
@@ -147,6 +178,113 @@ public class UserService implements UserDetailsService {
         session.invalidate();
         log.info("Получен ответ на запрос /api/auth/logout. Пользователь с email '" + principal.getName() + "' успешно вылогинен. Сессия с ID=" + sessionId + " удалена");
         return response;
+    }
+
+    public ResponseEntity<Response> editProfile(EditProfileRequest profileRequest, Principal principal) throws Exception {
+        if (principal == null) {
+            log.warn("Изменение профиля невозможно, т.к. пользователь не авторизован");
+            throw new Exception("Пользователь не авторизован");
+        }
+        User user = getUserByEmail(principal.getName());
+
+        String name = profileRequest.getName();
+        String email = profileRequest.getEmail();
+        String password = profileRequest.getPassword();
+        Integer remotePhoto = profileRequest.getRemovePhoto();
+
+        boolean isEmailExist = userRepository.isUserExistByEmail(email.toLowerCase()) > 0;
+        boolean isEmailValid = isEmailExist && user.getEmail().equalsIgnoreCase(email);
+        boolean isNameValid = name != null && !name.equals("") && !name.isBlank();
+        boolean isPasswordLengthValid;
+        boolean isPhotoValid = true;
+
+        if (password != null && !password.isBlank() && !password.equals("")) {
+            isPasswordLengthValid = password.length() >= userPasswordLength;
+            if (isPasswordLengthValid) {
+                user.setPassword(new BCryptPasswordEncoder(12).encode(password));
+            }
+        } else {
+            isPasswordLengthValid = true;
+        }
+
+        String photoPath = "";
+        if (remotePhoto != null && remotePhoto == 1) {
+            String currentPhoto = user.getPhoto();
+            fileService.deleteFileByPath(currentPhoto);
+            user.setPhoto(null);
+        } else {
+            if (profileRequest instanceof EditProfileWithPhotoRequest) {
+                MultipartFile newPhoto = ((EditProfileWithPhotoRequest) profileRequest).getPhoto();
+                if (newPhoto == null) {
+                    log.warn("Изображение для загрузки на сервер отсутствует");
+                    throw new Exception("Изображение для загрузки на сервер отсутствует");
+                } else {
+                    if (newPhoto.getSize() < 0 || newPhoto.getSize() > maxPhotoSize) {
+                        log.warn("Размер изображения превысил максимальное значение (10Мб) или отрицательный");
+                        isPhotoValid = false;
+                    } else {
+                        if (user.getPhoto() != null) {
+                            fileService.deleteFileByPath(user.getPhoto());
+                        }
+                        photoPath = fileService.createFile(avatarDir, format, newPhoto);
+                        user.setPhoto(photoPath);
+                    }
+                }
+            }
+        }
+
+        HashMap<String, String> errors = new HashMap<>();
+        ResponseEntity<Response> response;
+        if (!isEmailValid || !isNameValid || !isPasswordLengthValid || !isPhotoValid) {
+                if (!isNameValid) {
+                    log.warn("Имя пользователя не может быть пустым или содержать только пробелы");
+                    errors.put("name", "Имя указано неверно");
+                }
+
+                if (!isEmailValid) {
+                    log.warn("Пользователь с email '" + email + "' уже зарегистрирован");
+                    errors.put("email", "Этот e-mail уже зарегистрирован");
+                }
+
+                if (!isPasswordLengthValid) {
+                    log.warn("Пароль '" + password + "' содержит менее 6 символов");
+                    errors.put("password", "Пароль короче 6-ти символов");
+                }
+                if (!isPasswordLengthValid) {
+                    log.warn("Пароль '" + password + "' содержит менее 6 символов");
+                    errors.put("password", "Пароль короче 6-ти символов");
+                }
+                response = new ResponseEntity<>(new BadRequestMessageResponse(errors), HttpStatus.BAD_REQUEST);
+            } else {
+                user.setName(name);
+                user.setEmail(email);
+                userRepository.save(user);
+                response = new ResponseEntity<>(new BooleanResponse(true), HttpStatus.OK);
+        }
+        return response;
+    }
+
+    public ResponseEntity<Response> restorePassword(RestorePasswordRequest passwordRequest) {
+        String email = passwordRequest.getEmail();
+        User user;
+        if (userRepository.isUserExistByEmail(email) > 0) {
+            user = getUserByEmail(email);
+        } else {
+            log.warn("Пользователь с email '" + email + "' не найден");
+            return new ResponseEntity<>(new BooleanResponse(false), HttpStatus.BAD_REQUEST);
+        }
+
+        String code = RandomStringUtils.random(45, true, true);
+        user.setCode(code);
+        userRepository.save(user);
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(messageFrom);
+        message.setTo(email);
+        message.setSubject(messageSubject);
+        message.setText(messageLink + code);
+        mailSender.send(message);
+        log.info("Отправлено код '" + code + "' восстановления пароля на email '" + email + "'");
+        return new ResponseEntity<>(new BooleanResponse(true), HttpStatus.OK);
     }
 
     @Override

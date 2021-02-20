@@ -3,11 +3,15 @@ package main.mapper;
 import javassist.NotFoundException;
 import org.hibernate.TypeMismatchException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.support.WebExchangeBindException;
 
 import javax.validation.ConstraintViolationException;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import static org.springframework.http.HttpStatus.*;
 
@@ -46,6 +50,21 @@ public class ExceptionMapper {
 
     @ExceptionHandler({Exception.class})
     public ResponseEntity<String> handleException(Exception e) {
+        return ResponseEntity.status(BAD_REQUEST).body(e.getMessage());
+    }
+
+    @ExceptionHandler({UsernameNotFoundException.class})
+    public ResponseEntity<String> handleException(UsernameNotFoundException e) {
+        return ResponseEntity.status(BAD_REQUEST).body(e.getMessage());
+    }
+
+    @ExceptionHandler({IOException.class})
+    public ResponseEntity<String> handleException(IOException e) {
+        return ResponseEntity.status(BAD_REQUEST).body(e.getMessage());
+    }
+
+    @ExceptionHandler({FileNotFoundException.class})
+    public ResponseEntity<String> handleException(FileNotFoundException e) {
         return ResponseEntity.status(BAD_REQUEST).body(e.getMessage());
     }
 

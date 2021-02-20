@@ -1,88 +1,109 @@
 package main.service;
 
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import main.api.response.BadRequestMessageResponse;
-import main.model.entity.User;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
 
 @Service
 @Slf4j
-@Data
 public class FileService {
 
-    @Value("${image.root_dir}")
-    private String rootDir;
+    @Value("${image.folder_length}")
+    private int folderLength;
 
-    @Value("${image.format}")
-    private String format;
+    @Value("${image.name_length}")
+    private int nameLength;
 
-    @Value("${image.max_size}")
-    private int maxSize;
-
-    @Autowired
-    private UserService userService;
-
-
-    public ResponseEntity<?> uploadFile(MultipartFile file, HttpSession session) throws Exception {
-
-        HashMap<String, String> errors = new HashMap<>();
-
-        if (file == null) {
-            log.warn("Изображение для загрузки на сервер отсутствует");
-            throw new Exception("Изображение для загрузки на сервер отсутствует");
+    public boolean createDirectory(String path) {
+        try {
+            Files.createDirectories(Path.of(path));
+            log.info("Директория '" + path + "' успешно создана");
+            return true;
+        } catch (IOException ex) {
+            log.error("Директория '" + path + "' не создана");
+            return false;
         }
+    }
 
-        if (file.getSize() > maxSize) {
-            errors.put("image", "Размер файла превышает допустимый размер (10Мб)");
-            return new ResponseEntity<>(new BadRequestMessageResponse(errors), HttpStatus.BAD_REQUEST);
+    private File getFileByPath(String pathToFile) throws FileNotFoundException {
+        if (Files.exists(Path.of(pathToFile))) {
+            File file = new File(pathToFile);
+            log.info("Получен файл по пути: {" +
+                    pathToFile + "}"
+            );
+            return file;
+        } else {
+            log.error("Не удалось найти файл по пути {: " + pathToFile + "}");
+            throw new FileNotFoundException("По указанному пути отсутствует файл");
         }
+    }
 
-        User user = userService.getUserBySession(session);
-        if (user == null) {
-            log.warn("Не найден пользователь для сессии с ID=" + session.getId());
-            throw new Exception("Пользователь не найден");
+    public boolean deleteFileByPath(String pathToFile) {
+        if (pathToFile != null && !pathToFile.isBlank() && !pathToFile.equals("")) {
+            try {
+                boolean isDeleteSucceed = Files.deleteIfExists(Path.of("." + pathToFile));
+                log.info("Файл успешно удален по пути: {" + pathToFile + "}");
+                return isDeleteSucceed;
+            } catch (IOException e) {
+                log.error("Не удалось удалить файл по пути: {" + pathToFile  + "}", e);
+                return false;
+            }
         }
+        log.warn("Не удалось удалить файл по пути: {" + pathToFile + "}");
+        return false;
+    }
 
-        if (!Files.exists(Path.of(rootDir))) {
-            createRandomDirectory(rootDir);
+    public ResponseEntity<?> getResponseWithImage(String pathToFile) {
+        log.info("Запрошен файл с изображением по пути: {" + pathToFile + "}");
+        try {
+            File file = getFileByPath(pathToFile);
+            byte[] image = Files.readAllBytes(file.toPath());
+            log.info("Файл с изображением успешно получен по пути: {" + file.getAbsolutePath() + "}");
+            return ResponseEntity.ok()
+                    .contentType(MediaType.MULTIPART_FORM_DATA)
+                    .body(image);
+        } catch (IOException e) {
+            e.printStackTrace();
+            log.warn("Не удалось получить файл изображения по пути: {" + pathToFile + "}");
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        String path = "";
-        String hash = RandomStringUtils.random(6, true, true);
+    }
+
+    public String createFile(String uploadDir, String format, MultipartFile file) throws Exception {
+        if (!Files.exists(Path.of(uploadDir))) {
+            createDirectory(uploadDir);
+        }
+        String path;
+        String responsePath = "";
+        String hash = RandomStringUtils.random(folderLength, true, true);
         String firstFolder = hash.substring(0, hash.length() / 3);
         String secondFolder = hash.substring(firstFolder.length(), (firstFolder.length() + hash.length() / 3));
         String thirdFolder = hash.substring(firstFolder.length() + secondFolder.length());
-        StringBuilder builder = new StringBuilder();
-        builder.append(rootDir)
-                .append(File.separator)
-                .append(firstFolder)
-                .append(File.separator)
-                .append(secondFolder)
-                .append(File.separator)
-                .append(thirdFolder);
+
+        StringBuilder builder = new StringBuilder(uploadDir)
+                .append(File.separator).append(firstFolder)
+                .append(File.separator).append(secondFolder)
+                .append(File.separator).append(thirdFolder);
         path = builder.toString();
-        if (createRandomDirectory(path)) {
-            String image = RandomStringUtils.random(5, true, true) + "." + format;
-            String responsePath = path + File.separator + image;
+        if (createDirectory(path)) {
+            String image = RandomStringUtils.random(nameLength, true, true) + "." + format;
+            responsePath = File.separator + path + File.separator + image;
 
             while (Files.exists(Path.of(responsePath))) {
-                image = RandomStringUtils.random(5, true, true) + "." + format;
-                responsePath = path + File.separator + image;
+                image = RandomStringUtils.random(nameLength, true, true) + "." + format;
+                responsePath = File.separator + path + File.separator + image;
             }
 
             try {
@@ -96,37 +117,12 @@ public class FileService {
                         "original_name: " + file.getOriginalFilename() + ", " +
                         "size: " + file.getSize() + ", " +
                         "content_type: " + file.getContentType() + "}");
+                throw new IOException("Не удалось загрузить файл на сервер");
             }
-            ResponseEntity<String> response = new ResponseEntity<>(responsePath, HttpStatus.OK);
-            log.info("Направляется ответ на запрос /api/image cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");
-            return response;
         } else {
             throw new Exception("Директория '" + path + "' не создана");
         }
-    }
-
-    private boolean createRandomDirectory(String path) {
-        try {
-            Files.createDirectories(Path.of(path));
-            log.info("Директория '" + path + "' успешно создана");
-            return true;
-        } catch (IOException ex) {
-            log.error("Директория '" + rootDir + "' не создана");
-            return false;
-        }
-    }
-
-    public File getFileByPath(String pathToFile) throws FileNotFoundException {
-        if (Files.exists(Path.of(pathToFile))) {
-            File file = new File(pathToFile);
-            log.info("--- Получен файл по пути: {" +
-                    pathToFile + "}"
-            );
-            return file;
-        } else {
-            log.error("--- Не удалось найти файл: " + pathToFile);
-            throw new FileNotFoundException("По указанному пути отсутствует файл");
-        }
+        return responsePath;
     }
 
 

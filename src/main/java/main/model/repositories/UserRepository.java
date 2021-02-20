@@ -10,7 +10,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
 
     @Query(value = "SELECT " +
-            "IF((SELECT COUNT(*) FROM users WHERE email = ?) > 0, TRUE, FALSE) " +
+            "IF((SELECT COUNT(*) FROM users WHERE LOWER(email) = ?) > 0, TRUE, FALSE) " +
             "FROM users;", nativeQuery = true)
     Integer isUserExistByEmail(String email);
 
