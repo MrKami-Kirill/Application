@@ -166,9 +166,8 @@ public class PostService {
     public ResponseEntity<Response> getPostById(Integer postId, HttpSession session) throws Exception {
 
         Post post = postRepository.findById(postId).orElse(null);
-        if (post == null) {
-            log.warn("Ошибка! Пост с ID=" + postId + " не найден");
-            throw new Exception("Пост не найден");
+        if (!isPostExist(post)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
         log.info("Получен пост с ID=" + post.getId());
 
@@ -200,9 +199,8 @@ public class PostService {
     public ResponseEntity<Response> getMyPosts(String status, Integer offset, Integer limit, HttpSession session) throws Exception {
 
         User user = userService.getUserBySession(session);
-        if (user == null) {
-            log.warn("Не найден пользователь для сессии с ID=" + session.getId());
-            throw new Exception("Пользователь не найден");
+        if (!isUserExist(user, session)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
 
         Integer userId = user.getId();
@@ -243,9 +241,8 @@ public class PostService {
 
     public ResponseEntity<Response> getAllModeratePosts(String status, Integer offset, Integer limit, HttpSession session) throws Exception {
         User moderator = userService.getUserBySession(session);
-        if (moderator == null) {
-            log.warn("Не найден пользователь для сессии с ID=" + session.getId());
-            throw new Exception("Пользователь не найден");
+        if (!isUserExist(moderator, session)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
         if (moderator.getIsModerator() == 0) {
             log.info("Для данного действия пользователю c ID=" + moderator.getId() + " требуются права модератора");
@@ -313,9 +310,8 @@ public class PostService {
         LocalDateTime time = getTimeForPost(timestamp);
 
         User user = userService.getUserBySession(session);
-        if (user == null) {
-            log.warn("Не найден пользователь для сессии с ID=" + session.getId());
-            throw new Exception("Пользователь не найден");
+        if (!isUserExist(user, session)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
 
         if (user.getIsModerator() == 1 || (user.getIsModerator() == 0 && !globalSettingService.getGlobalSettingValue(GlobalSettingService.POST_PREMODERATION_CODE))) {
@@ -343,9 +339,8 @@ public class PostService {
         List<String> tags = postRequest.getTags();
         Post post = postRepository.findById(id).orElse(null);
 
-        if (post == null) {
-            log.warn("Не найден пост с ID=" + id);
-            throw new Exception("Пост не найден");
+        if (!isPostExist(post)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
         boolean isTitleValid = isPostTextValid(title, postTitleMinLength);
@@ -372,14 +367,12 @@ public class PostService {
         }
 
         User user = userService.getUserBySession(session);
-        if (user == null) {
-            log.warn("Не найден пользователь для сессии с ID=" + session.getId());
-            throw new Exception("Пользователь не найден");
+        if (!isUserExist(user, session)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
 
         if (post.getUser() != user && user.getIsModerator() == 0) {
             log.warn("Пользователь с ID=" + user.getId() + " не может редактировать пост с ID=" + post.getId() + " , т.к. не является его автором");
-            errors.put("user", "Пользователь не является автором поста");
             throw  new Exception("Пользователь не является автором поста");
         }
 
@@ -417,15 +410,13 @@ public class PostService {
         String decision = moderationRequest.getDecision();
 
         User user = userService.getUserBySession(session);
-        if (user == null) {
-            log.warn("Не найден пользователь для сессии с ID=" + session.getId());
-            throw new Exception("Пользователь не найден");
+        if (!isUserExist(user, session)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
 
         Post post = postRepository.findById(postId).orElse(null);
-        if (post == null) {
-            log.warn("Ошибка! Пост с ID=" + postId + " не найден");
-            throw new Exception("Пост не найден");
+        if (!isPostExist(post)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
         ResponseEntity<Response> response = new ResponseEntity<>(new BooleanResponse(true), HttpStatus.OK);;
@@ -462,9 +453,8 @@ public class PostService {
         }
 
         User user = userService.getUserBySession(session);
-        if (user == null) {
-            log.warn("Не найден пользователь для сессии с ID=" + session.getId());
-            throw new Exception("Пользователь не найден");
+        if (!isUserExist(user, session)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
 
         String responsePath = fileService.createFile(uploadDir, format, file);
@@ -475,9 +465,8 @@ public class PostService {
 
     public ResponseEntity<Response> getMyStatistics(HttpSession session) throws Exception {
         User user = userService.getUserBySession(session);
-        if (user == null) {
-            log.warn("Не найден пользователь для сессии с ID=" + session.getId());
-            throw new Exception("Пользователь не найден");
+        if (!isUserExist(user, session)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
 
         int userId = user.getId();
@@ -520,15 +509,13 @@ public class PostService {
         int postId = voteRequest.getPostId();
 
         Post post = postRepository.findById(postId).orElse(null);
-        if (post == null) {
-            log.warn("Ошибка! Пост с ID=" + postId + " не найден");
-            return new ResponseEntity<>(new BooleanResponse(false), HttpStatus.BAD_REQUEST);
+        if (!isPostExist(post)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
         User user = userService.getUserBySession(session);
-        if (user == null) {
-            log.warn("Не найден пользователь для сессии с ID=" + session.getId());
-            return new ResponseEntity<>(new BooleanResponse(false), HttpStatus.BAD_REQUEST);
+        if (!isUserExist(user, session)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
 
         ResponseEntity<Response> response;
@@ -563,6 +550,24 @@ public class PostService {
             return false;
         }
         return true;
+    }
+
+    private boolean isPostExist(Post post) {
+        if (post == null) {
+            log.warn("Ошибка! Пост с ID=" + post.getId() + " не найден");
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private boolean isUserExist(User user, HttpSession session) {
+        if (user == null) {
+            log.warn("Не найден пользователь для сессии с ID=" + session.getId());
+            return false;
+        } else {
+            return true;
+        }
     }
 
     private LocalDateTime getTimeForPost(String timestamp) {

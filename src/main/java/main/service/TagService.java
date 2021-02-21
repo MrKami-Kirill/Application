@@ -71,7 +71,7 @@ public class TagService {
 
         } else {
             log.info("Теги не найдены");
-            return ResponseEntity.status(HttpStatus.OK).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
 

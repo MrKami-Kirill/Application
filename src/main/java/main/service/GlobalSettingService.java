@@ -3,7 +3,6 @@ package main.service;
 
 import lombok.extern.slf4j.Slf4j;
 import main.api.request.GlobalSettingRequest;
-import main.api.response.BooleanResponse;
 import main.api.response.GlobalSettingResponse;
 import main.api.response.Response;
 import main.model.entity.GlobalSetting;

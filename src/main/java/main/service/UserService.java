@@ -1,6 +1,5 @@
 package main.service;
 
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import main.api.request.*;
 import main.api.response.*;
@@ -98,7 +97,7 @@ public class UserService implements UserDetailsService {
         String email = principal.getName();
         User currentUser = getUserByEmail(email);
         ResponseEntity<Response> response = new ResponseEntity<>(new AuthUserResponse(currentUser, announceLength), HttpStatus.OK);
-        log.info("Получен ответ на запрос /api/auth/check. Пользователь с email '" + email + "' успешно авторизован");
+        log.info("Получен ответ на запрос /api/auth/check. Пользователь с email '" + email + "' авторизован");
         return response;
 
     }
@@ -189,7 +188,7 @@ public class UserService implements UserDetailsService {
     public ResponseEntity<Response> editProfile(EditProfileRequest profileRequest, Principal principal) throws Exception {
         if (principal == null) {
             log.warn("Изменение профиля невозможно, т.к. пользователь не авторизован");
-            throw new Exception("Пользователь не авторизован");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
         User user = getUserByEmail(principal.getName());
 
