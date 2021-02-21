@@ -105,8 +105,8 @@ public class UserService implements UserDetailsService {
 
     public ResponseEntity<Response> register(RegisterRequest registerRequest) {
 
-        if (!globalSettingService.getGlobalSettingValue("MULTIUSER_MODE")) {
-            log.warn("Регистрация нового пользователя невозможна, т.к. глобаальная настройка сайта MULTIUSER_MODE включена");
+        if (!globalSettingService.getGlobalSettingValue(GlobalSettingService.MULTIUSER_MODE_CODE)) {
+            log.warn("Регистрация нового пользователя невозможна, т.к. глобальная настройка сайта MULTIUSER_MODE включена");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
@@ -117,7 +117,7 @@ public class UserService implements UserDetailsService {
         String captchaSecret = registerRequest.getCaptchaSecret();
 
         boolean isEmailExist = userRepository.isUserExistByEmail(email.toLowerCase()) > 0;
-        boolean isNameValid = name != null && !name.equals("") && !name.isBlank();
+        boolean isNameValid = isStringParamValid(name);
         boolean isPasswordLengthValid = password.length() >= userPasswordLength;
         boolean isCaptchaValid = captchaCodeService.isCaptchaValid(captcha, captchaSecret);
         if (!isEmailExist && isNameValid && isPasswordLengthValid && isCaptchaValid) {
@@ -200,11 +200,11 @@ public class UserService implements UserDetailsService {
 
         boolean isEmailExist = userRepository.isUserExistByEmail(email.toLowerCase()) > 0;
         boolean isEmailValid = isEmailExist && user.getEmail().equalsIgnoreCase(email);
-        boolean isNameValid = name != null && !name.equals("") && !name.isBlank();
+        boolean isNameValid = isStringParamValid(name);
         boolean isPasswordLengthValid;
         boolean isPhotoValid = true;
 
-        if (password != null && !password.isBlank() && !password.equals("")) {
+        if (isStringParamValid(password)) {
             isPasswordLengthValid = password.length() >= userPasswordLength;
             if (isPasswordLengthValid) {
                 user.setPassword(new BCryptPasswordEncoder(12).encode(password));
@@ -294,6 +294,50 @@ public class UserService implements UserDetailsService {
         return new ResponseEntity<>(new BooleanResponse(true), HttpStatus.OK);
     }
 
+    public ResponseEntity<Response> changePassword(ChangePasswordRequest passwordRequest) throws Exception {
+        String code = passwordRequest.getCode();
+        String password = passwordRequest.getPassword();
+        String captcha = passwordRequest.getCaptcha();
+        String captchaSecret = passwordRequest.getCaptchaSecret();
+
+        if (isStringParamValid(code) && isStringParamValid(password) && isStringParamValid(captcha) && isStringParamValid(captchaSecret)) {
+            HashMap<String, String> errors = new HashMap<>();
+            User user = userRepository.findUserByCode(code).orElse(null);
+            boolean isCodeValid = user != null;
+            boolean isCaptchaValid = captchaCodeService.isCaptchaValid(captcha, captchaSecret);
+            boolean isPasswordLengthValid = password.length() >= userPasswordLength;
+            if (isCodeValid && isCaptchaValid && isPasswordLengthValid) {
+                user.setPassword(new BCryptPasswordEncoder(12).encode(password));
+                user.setCode(null);
+                userRepository.save(user);
+                log.info("Успешно изменен пароль для пользователя с ID: " + user.getId());
+                return new ResponseEntity<>(new BooleanResponse(true), HttpStatus.OK);
+            } else {
+                if (!isCodeValid) {
+                    log.warn("Ссылка для восстановления пароля устарела");
+                    errors.put("code", "Ссылка для восстановления пароля устарела. <a href=" +
+                            "\"" + messageServerLink + serverPort + "/login/restore-password\">Запросить ссылку снова</a>");
+                }
+                if (!isCaptchaValid) {
+                    log.warn("Введенной значение каптчи '" + captcha + "' не совпало с картинкой");
+                    errors.put("captcha", "Код с картинки введён неверно");
+                }
+                if (!isPasswordLengthValid) {
+                    log.warn("Пароль '" + password + "' содержит менее 6 символов");
+                    errors.put("password", "Пароль короче 6-ти символов");
+                }
+                return new ResponseEntity<>(new BadRequestMessageResponse(errors), HttpStatus.BAD_REQUEST);
+            }
+        } else {
+            log.error("Параметры запроса заданы не верно: {" +
+                    "Code: " + code + ", " +
+                    "Password:" + password + ", " +
+                    "Captcha:" + captcha + ", " +
+                    "Captcha_secret" + captchaSecret + "}");
+            throw new Exception("Параметры в запросе заданы не верно");
+        }
+    }
+
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = getUserByEmail(email);
@@ -320,5 +364,9 @@ public class UserService implements UserDetailsService {
 
     private User getUserByEmail(String email) {
         return userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("Пользователь с email: '" + email + "' не найден"));
+    }
+
+    private boolean isStringParamValid(String text) {
+        return !text.isBlank() && !text.equals("") && text != null;
     }
 }

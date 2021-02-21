@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface PostRepository extends JpaRepository<Post, Integer> {
@@ -91,6 +92,34 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             "AND p.moderator_id = ?2 " +
             "AND p.moderator_id IS NOT NULL", nativeQuery = true)
     int countAllModeratePostsByMe(String status, Integer moderatorId);
+
+    @Query(value = "SELECT COUNT(*) FROM posts p " +
+            "WHERE p.is_active = 1 " +
+            "AND p.moderation_status = 'ACCEPTED' " +
+            "AND p.user_id = ?1", nativeQuery = true)
+    int countMyPosts(int userId);
+
+    @Query(value = "SELECT SUM(p.view_count) FROM posts p " +
+            "WHERE p.is_active = 1 " +
+            "AND p.moderation_status = 'ACCEPTED' " +
+            "AND p.user_id = ?1", nativeQuery = true)
+    int countMyViews(int userId);
+
+    @Query(value = "SELECT SUM(p.view_count) FROM posts p " +
+            "WHERE p.is_active = 1 " +
+            "AND p.moderation_status = 'ACCEPTED'", nativeQuery = true)
+    int countViews();
+
+    @Query(value = "SELECT p.time FROM posts p " +
+            "WHERE p.is_active = 1 " +
+            "AND p.moderation_status = 'ACCEPTED' " +
+            "AND p.user_id = ?1", nativeQuery = true)
+    LocalDateTime getMyFirsPublicationTime(int userId, PageRequest pageRequest);
+
+    @Query(value = "SELECT p.time FROM posts p " +
+            "WHERE p.is_active = 1 " +
+            "AND p.moderation_status = 'ACCEPTED'", nativeQuery = true)
+    LocalDateTime getFirsPublicationTime(PageRequest pageRequest);
 
     @Query(value = "SELECT * FROM posts p WHERE p.is_active = 1 " +
             "AND p.moderation_status = 'ACCEPTED' " +

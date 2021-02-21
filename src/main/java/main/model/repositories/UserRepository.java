@@ -14,5 +14,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
             "FROM users;", nativeQuery = true)
     Integer isUserExistByEmail(String email);
 
+    Optional<User> findUserByCode(String code);
+
     Optional<User> findByEmail(String email);
 }

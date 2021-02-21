@@ -2,6 +2,7 @@ package main.controllers;
 
 import lombok.extern.slf4j.Slf4j;
 import main.api.request.PostRequest;
+import main.api.request.VoteRequest;
 import main.api.response.Response;
 import main.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -126,6 +127,24 @@ public class ApiPostController {
                 "Text: " + postRequest.getActive() + ", " +
                 "Tags: " + Arrays.toString(postRequest.getTags().toArray()) + "}");
         return postService.editPost(id, postRequest, request.getSession());
+    }
+
+    @PostMapping(value = "/post/like")
+    @PreAuthorize("hasAuthority('user:write')")
+    public ResponseEntity<Response> likePost(@RequestBody VoteRequest voteRequest, HttpServletRequest request) throws Exception {
+        log.info("Отправлен POST запрос на /api/post/like со следующими параметрами: {" +
+                "Post_id: " + voteRequest.getPostId() + "}");
+        byte value = 1;
+        return postService.vote(voteRequest, request.getSession(), value);
+    }
+
+    @PostMapping(value = "/post/dislike")
+    @PreAuthorize("hasAuthority('user:write')")
+    public ResponseEntity<Response> dislikePost(@RequestBody VoteRequest voteRequest, HttpServletRequest request) throws Exception {
+        log.info("Отправлен POST запрос на /api/post/dislike со следующими параметрами: {" +
+                "Post_id: " + voteRequest.getPostId() + "}");
+        byte value = -1;
+        return postService.vote(voteRequest, request.getSession(), value);
     }
 
 }

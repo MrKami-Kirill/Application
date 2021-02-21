@@ -36,6 +36,13 @@ public class PostVote implements Serializable {
     @ManyToOne(optional = false)
     private Post post;
 
+    public PostVote(@NotNull LocalDateTime time, @NotNull byte value, User user, Post post) {
+        this.time = time;
+        this.value = value;
+        this.user = user;
+        this.post = post;
+    }
+
     public int getId() {
         return id;
     }

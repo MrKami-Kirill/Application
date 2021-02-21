@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import main.api.request.PostModerationRequest;
 import main.api.request.PostRequest;
+import main.api.request.VoteRequest;
 import main.api.response.*;
 import main.model.ModerationStatus;
 import main.model.entity.Post;
@@ -11,6 +12,8 @@ import main.model.entity.User;
 import main.model.repositories.PostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -60,6 +63,9 @@ public class PostService {
 
     @Autowired
     private FileService fileService;
+
+    @Autowired
+    private PostVoteService postVoteService;
 
     public ResponseEntity<Response> getAllPosts(Integer  offset, Integer limit, String mode) {
 
@@ -312,7 +318,7 @@ public class PostService {
             throw new Exception("Пользователь не найден");
         }
 
-        if (user.getIsModerator() == 1 || (user.getIsModerator() == 0 && !globalSettingService.getGlobalSettingValue("POST_PREMODERATION"))) {
+        if (user.getIsModerator() == 1 || (user.getIsModerator() == 0 && !globalSettingService.getGlobalSettingValue(GlobalSettingService.POST_PREMODERATION_CODE))) {
             moderationStatus = ModerationStatus.ACCEPTED;
         }
 
@@ -379,7 +385,7 @@ public class PostService {
 
         ModerationStatus moderationStatus = post.getModerationStatus();
 
-        if (post.getUser() == user && globalSettingService.getGlobalSettingValue("POST_PREMODERATION") && user.getIsModerator() == 0) {
+        if (post.getUser() == user && globalSettingService.getGlobalSettingValue(GlobalSettingService.POST_PREMODERATION_CODE) && user.getIsModerator() == 0) {
             moderationStatus = ModerationStatus.NEW;
         }
 
@@ -467,11 +473,84 @@ public class PostService {
         return response;
     }
 
+    public ResponseEntity<Response> getMyStatistics(HttpSession session) throws Exception {
+        User user = userService.getUserBySession(session);
+        if (user == null) {
+            log.warn("Не найден пользователь для сессии с ID=" + session.getId());
+            throw new Exception("Пользователь не найден");
+        }
+
+        int userId = user.getId();
+        int postsCount = postRepository.countMyPosts(userId);
+        log.info("Получено общее кол-во постов (" + postsCount + ") для пользователя с ID: " + userId);
+        int likesCount = postVoteService.countMyLikes(userId);
+        int dislikesCount = postVoteService.countMyDislikes(userId);
+        int viewsCount = postRepository.countMyViews(userId);
+        log.info("Получено общее кол-во просмотров (" + viewsCount + ") для пользователя с ID: " + userId);
+        LocalDateTime fistPublicationTime = postRepository.getMyFirsPublicationTime(userId, PageRequest.of(0, 1, Sort.by("time").ascending()));
+        log.info("Получено время первой публикации (" + fistPublicationTime + ") для пользователя с ID: " + userId);
+        String firstPublication = parseTimeToStringUTCFormat(fistPublicationTime);
+        ResponseEntity<Response> response = new ResponseEntity<>(new StatisticsResponse(postsCount, likesCount, dislikesCount, viewsCount, firstPublication), HttpStatus.OK);
+        log.info("Направляется ответ на запрос /api/statistics/my cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");
+        return response;
+    }
+
+    public ResponseEntity<Response> getAllStatistics() {
+
+        if (!globalSettingService.getGlobalSettingValue(GlobalSettingService.STATISTICS_IS_PUBLIC_CODE)) {
+            log.warn("Получение всей статистики по сайту невозможно, т.к. глобальная настройка сайта STATISTICS_IS_PUBLIC включена");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+
+        int postsCount = postRepository.countAllPosts();
+        log.info("Получено общее кол-во постов (" + postsCount + ") на сайте");
+        int likesCount = postVoteService.countLikes();
+        int dislikesCount = postVoteService.countDislikes();
+        int viewsCount = postRepository.countViews();
+        log.info("Получено общее кол-во просмотров (" + viewsCount + ") на сайте");
+        LocalDateTime fistPublicationTime = postRepository.getFirsPublicationTime(PageRequest.of(0, 1, Sort.by("time").ascending()));
+        log.info("Получено время первой публикации (" + fistPublicationTime + ") на сайте ");
+        String firstPublication = parseTimeToStringUTCFormat(fistPublicationTime);
+        ResponseEntity<Response> response = new ResponseEntity<>(new StatisticsResponse(postsCount, likesCount, dislikesCount, viewsCount, firstPublication), HttpStatus.OK);
+        log.info("Направляется ответ на запрос /api/statistics/all cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");
+        return response;
+    }
+
+    public ResponseEntity<Response> vote(VoteRequest voteRequest, HttpSession session, byte value) throws Exception {
+        int postId = voteRequest.getPostId();
+
+        Post post = postRepository.findById(postId).orElse(null);
+        if (post == null) {
+            log.warn("Ошибка! Пост с ID=" + postId + " не найден");
+            return new ResponseEntity<>(new BooleanResponse(false), HttpStatus.BAD_REQUEST);
+        }
+
+        User user = userService.getUserBySession(session);
+        if (user == null) {
+            log.warn("Не найден пользователь для сессии с ID=" + session.getId());
+            return new ResponseEntity<>(new BooleanResponse(false), HttpStatus.BAD_REQUEST);
+        }
+
+        ResponseEntity<Response> response;
+        String strValue = value == 1 ? "like" : "dislike";
+        if (postVoteService.vote(user, post, value)) {
+            response = new ResponseEntity<>(new BooleanResponse(true), HttpStatus.OK);
+        } else {
+            response = new ResponseEntity<>(new BooleanResponse(false), HttpStatus.OK);
+        }
+        log.info("Направляется ответ на запрос /api/statistics/" + strValue + " cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");
+        return response;
+    }
+
     private boolean isPostTextValid(String text, int minLength) {
         if (text == null || text.isBlank() || text.equals("") || text.length() < minLength) {
             return false;
         }
         return true;
+    }
+
+    private String parseTimeToStringUTCFormat(LocalDateTime time) {
+        return String.valueOf(time.atZone(ZoneOffset.UTC).toInstant().toEpochMilli() / 1000);
     }
 
     private boolean isPostTimeValid(String time) {

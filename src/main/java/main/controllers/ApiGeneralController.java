@@ -1,10 +1,7 @@
 package main.controllers;
 
 import lombok.extern.slf4j.Slf4j;
-import main.api.request.EditProfileRequest;
-import main.api.request.EditProfileWithPhotoRequest;
-import main.api.request.PostCommentRequest;
-import main.api.request.PostModerationRequest;
+import main.api.request.*;
 import main.api.response.InitResponse;
 import main.api.response.Response;
 import main.service.*;
@@ -119,5 +116,22 @@ public class ApiGeneralController {
                 "PhotoFileName:" + editProfileRequest.getPhoto().getOriginalFilename() + "," +
                 "PhotoFileSize:" + editProfileRequest.getPhoto().getSize() + "}");
         return userService.editProfile(editProfileRequest, principal);
+    }
+
+    @GetMapping(value = "/statistics/my")
+    @PreAuthorize("hasAuthority('user:write')")
+    public ResponseEntity<Response> getMyStatistics(HttpServletRequest request) throws Exception {
+        return postService.getMyStatistics(request.getSession());
+    }
+
+    @GetMapping(value = "/statistics/all")
+    public ResponseEntity<Response> getAllStatistics() {
+        return postService.getAllStatistics();
+    }
+
+    @PutMapping(value = "/settings")
+    @PreAuthorize("hasAuthority('user:moderate')")
+    public ResponseEntity<Response> setGlobalSettings(@RequestBody GlobalSettingRequest settingRequest, HttpServletRequest request) throws Exception {
+        return globalSettingService.setGlobalSettnigs(settingRequest, request.getSession());
     }
 }

@@ -2,6 +2,7 @@ package main.controllers;
 
 
 import lombok.extern.slf4j.Slf4j;
+import main.api.request.ChangePasswordRequest;
 import main.api.request.LoginRequest;
 import main.api.request.RegisterRequest;
 import main.api.request.RestorePasswordRequest;
@@ -73,6 +74,16 @@ public class ApiAuthController {
         log.info("Отправлен POST запрос на /api/auth/restore со следующими параметрами: {" +
                 "Email: " + passwordRequest.getEmail()  + "}");
         return userService.restorePassword(passwordRequest);
+    }
+
+    @PostMapping(value = "/password")
+    public ResponseEntity<Response> changePassword(@RequestBody ChangePasswordRequest passwordRequest) throws Exception {
+        log.info("Отправлен POST запрос на /api/auth/password со следующими параметрами: {" +
+                "Code: " + passwordRequest.getCode()  + ", " +
+                "Password: " + passwordRequest.getPassword()  + ", " +
+                "Captcha: " + passwordRequest.getCaptcha()  + ", " +
+                "Captcha_secret: " + passwordRequest.getCaptchaSecret()  + "}");
+        return userService.changePassword(passwordRequest);
     }
 }
 
