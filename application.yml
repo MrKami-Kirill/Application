@@ -81,6 +81,7 @@ user:
         from: application.skillbox
         subject: "Ссылка для восстановления пароля"
         link: "/login/change-password/"
+        server_link: "http://localhost:"
     length: 6
   image:
     avatar_dir: avatars

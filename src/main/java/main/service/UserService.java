@@ -61,6 +61,12 @@ public class UserService implements UserDetailsService {
     @Value("${user.password.restore.message.link}")
     private String messageLink;
 
+    @Value("${user.password.restore.message.server_link}")
+    private String messageServerLink;
+
+    @Value("${server.port}")
+    private String serverPort;
+
     private Map<String, Integer> sessionMap = new HashMap<>();
 
     @Autowired
@@ -281,7 +287,8 @@ public class UserService implements UserDetailsService {
         message.setFrom(messageFrom);
         message.setTo(email);
         message.setSubject(messageSubject);
-        message.setText(messageLink + code);
+        String messageText = "Для смены пароля перейдите по следующей ссылке: " + messageServerLink + serverPort + messageLink + code;
+        message.setText(messageText);
         mailSender.send(message);
         log.info("Отправлено код '" + code + "' восстановления пароля на email '" + email + "'");
         return new ResponseEntity<>(new BooleanResponse(true), HttpStatus.OK);
