@@ -136,10 +136,10 @@
             <artifactId>jsoup</artifactId>
             <version>1.13.1</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.flywaydb</groupId>-->
-<!--            <artifactId>flyway-core</artifactId>-->
-<!--            <version>6.0.8</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+            <version>6.0.8</version>
+        </dependency>
     </dependencies>
 </project>
