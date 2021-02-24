@@ -2,6 +2,7 @@ main/controllers/ApiPostController.class
 main/api/request/PostCommentRequest.class
 main/mapper/ExceptionMapper.class
 main/model/repositories/TagToPostRepository.class
+main/config/InitConfig.class
 main/api/response/PostsResponse$PostResponse.class
 main/api/request/PostModerationRequest.class
 main/model/repositories/PostVoteRepository.class
@@ -58,7 +59,6 @@ main/api/response/GlobalSettingResponse.class
 main/api/response/TagResponse.class
 main/api/response/LoginResponse.class
 main/api/request/EditProfileRequest.class
-main/api/response/InitResponse.class
 main/model/repositories/PostCommentRepository.class
 main/api/response/FullPostResponse$Comment$CommentUser.class
 main/api/response/CaptchaCodeResponse.class

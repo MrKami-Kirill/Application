@@ -5,7 +5,6 @@
 /home/kirill/IdeaProjects/Skillbox/Application/src/main/java/main/service/CaptchaCodeService.java
 /home/kirill/IdeaProjects/Skillbox/Application/src/main/java/main/model/repositories/CaptchaCodeRepository.java
 /home/kirill/IdeaProjects/Skillbox/Application/src/main/java/main/model/entity/PostComment.java
-/home/kirill/IdeaProjects/Skillbox/Application/src/main/java/main/api/response/InitResponse.java
 /home/kirill/IdeaProjects/Skillbox/Application/src/main/java/main/service/UserService.java
 /home/kirill/IdeaProjects/Skillbox/Application/src/main/java/main/api/response/GlobalSettingResponse.java
 /home/kirill/IdeaProjects/Skillbox/Application/src/main/java/main/model/repositories/UserRepository.java
@@ -36,6 +35,7 @@
 /home/kirill/IdeaProjects/Skillbox/Application/src/main/java/main/api/request/RestorePasswordRequest.java
 /home/kirill/IdeaProjects/Skillbox/Application/src/main/java/main/model/repositories/PostCommentRepository.java
 /home/kirill/IdeaProjects/Skillbox/Application/src/main/java/main/model/repositories/PostRepository.java
+/home/kirill/IdeaProjects/Skillbox/Application/src/main/java/main/config/InitConfig.java
 /home/kirill/IdeaProjects/Skillbox/Application/src/main/java/main/api/response/StatisticsResponse.java
 /home/kirill/IdeaProjects/Skillbox/Application/src/main/java/main/controllers/ApiPostController.java
 /home/kirill/IdeaProjects/Skillbox/Application/src/main/java/main/service/PostVoteService.java
