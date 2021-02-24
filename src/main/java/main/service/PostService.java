@@ -161,7 +161,10 @@ public class PostService {
 
         int count = postRepository.countAllPostsByDate(date);
         log.info("Получено общее кол-во постов на сайте (" + count + ") за дату '" + date + "'");
-        List<Post> posts = postRepository.getAllPostsByDate(date, offset, limit);
+        List<Post> posts = postRepository.getAllPostsByDate(
+                date,
+                PageRequest.of(offset/limit, limit, Sort.by("time").descending())
+                );
         log.info("Получен список постов за '" + date + "' для отображения: " + Arrays.toString(posts.toArray()));
         ResponseEntity<Response> response = new ResponseEntity<>(new PostsResponse(count, posts, announceLength), HttpStatus.OK);
         log.info("Направляется ответ на запрос /api/post/byDate cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");

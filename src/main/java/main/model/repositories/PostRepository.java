@@ -173,9 +173,8 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Integer
             "WHERE DATE(p.time) = ?1 " +
             "AND p.is_active = 1 " +
             "AND p.moderation_status = 'ACCEPTED' " +
-            "AND p.time < NOW() " +
-            "ORDER BY p.time DESC LIMIT ?3 OFFSET ?2", nativeQuery = true)
-    List<Post> getAllPostsByDate(String date, Integer offset, Integer limit);
+            "AND p.time < NOW()", nativeQuery = true)
+    List<Post> getAllPostsByDate(String date, Pageable pa);
 
     @Query(value = "SELECT p FROM Post p " +
             "LEFT JOIN TagToPost t2p ON p.id = t2p.idPost.id " +
