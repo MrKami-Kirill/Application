@@ -519,7 +519,7 @@ public class PostService {
         log.info("Получено общее кол-во просмотров (" + viewsCount + ") для пользователя с ID: " + userId);
         String firstPublication = "";
         if (postRepository.isPostsExistByUserId(userId) > 0) {
-            LocalDateTime fistPublicationTime = postRepository.getMyFirsPublicationTime(ModerationStatus.ACCEPTED, userId, PageRequest.of(0, 1, Sort.by("time").ascending()));
+            LocalDateTime fistPublicationTime = postRepository.getMyFirsPublicationTime(userId, PageRequest.of(0, 1, Sort.by("time").ascending()));
             log.info("Получено время первой публикации (" + fistPublicationTime + ") для пользователя с ID: " + userId);
             firstPublication = parseTimeToStringFormat(fistPublicationTime);
         }
@@ -542,7 +542,7 @@ public class PostService {
         int dislikesCount = postVoteService.countDislikes();
         int viewsCount = postRepository.countViews();
         log.info("Получено общее кол-во просмотров (" + viewsCount + ") на сайте");
-        LocalDateTime fistPublicationTime = postRepository.getFirsPublicationTime(ModerationStatus.ACCEPTED, PageRequest.of(0, 1, Sort.by("time").ascending()));
+        LocalDateTime fistPublicationTime = postRepository.getFirsPublicationTime(PageRequest.of(0, 1, Sort.by("time").ascending()));
         log.info("Получено время первой публикации (" + fistPublicationTime + ") на сайте ");
         String firstPublication = parseTimeToStringFormat(fistPublicationTime);
         ResponseEntity<Response> response = new ResponseEntity<>(new StatisticsResponse(postsCount, likesCount, dislikesCount, viewsCount, firstPublication), HttpStatus.OK);

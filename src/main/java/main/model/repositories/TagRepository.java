@@ -22,19 +22,19 @@ public interface TagRepository extends JpaRepository<Tag, Integer> {
             "AND p.moderationStatus = :moderationStatus " +
             "AND p.time < :time " +
             "ORDER BY t.id DESC")
-    Page<Tag> getAllTags(
+    List<Tag> getAllTags(
             @Param("moderationStatus") ModerationStatus moderationStatus,
             @Param("time") LocalDateTime time);
 
     @Query(value = "SELECT DISTINCT t FROM Tag t " +
             "JOIN TagToPost t2p ON t.id = t2p.idTag.id " +
             "JOIN Post p ON t2p.idPost.id = p.id " +
-            "WHERE t.name LIKE %:query%" +
+            "WHERE t.name LIKE %:query% " +
             "AND p.isActive = true " +
             "AND p.moderationStatus = :moderationStatus " +
             "AND p.time < :time " +
             "ORDER BY t.id DESC")
-    Page<Tag> getAllTagsByQuery(
+    List<Tag> getAllTagsByQuery(
             @Param("query") String query,
             @Param("moderationStatus") ModerationStatus moderationStatus,
             @Param("time") LocalDateTime time);

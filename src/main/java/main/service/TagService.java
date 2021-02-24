@@ -41,12 +41,12 @@ public class TagService {
     }
 
     public ResponseEntity<Response> getAllTags() {
-        List<Tag> tags = tagRepository.getAllTags(ModerationStatus.ACCEPTED, LocalDateTime.now()).getContent();
+        List<Tag> tags = tagRepository.getAllTags(ModerationStatus.ACCEPTED, LocalDateTime.now());
         return getResponseEntityByTags(tags);
     }
 
     private ResponseEntity<Response> getAllTagsByQuery(String query) {
-        List<Tag> tags = tagRepository.getAllTagsByQuery(query, ModerationStatus.ACCEPTED, LocalDateTime.now()).getContent();
+        List<Tag> tags = tagRepository.getAllTagsByQuery(query, ModerationStatus.ACCEPTED, LocalDateTime.now());
         return getResponseEntityByTags(tags);
     }
 

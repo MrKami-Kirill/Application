@@ -17,7 +17,7 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Integer
     @Query(value = "SELECT COUNT(p.id) FROM Post p " +
             "WHERE p.isActive = true " +
             "AND p.moderationStatus = :moderationStatus")
-    Integer countAllPostsForModeration(
+    int countAllPostsForModeration(
             @Param("moderationStatus") ModerationStatus moderationStatus);
 
     @Query(value = "SELECT COUNT(p.id) FROM Post p " +
@@ -69,13 +69,13 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Integer
             @Param("moderationStatus") ModerationStatus moderationStatus,
             @Param("time") LocalDateTime time);
 
-    @Query(value = "SELECT p FROM Post p " +
+    @Query(value = "SELECT COUNT(p.id) FROM Post p " +
             "WHERE p.isActive = true " +
             "AND p.user.id = :userId")
     int countMyInActivePosts(
             @Param("userId") Integer userId);
 
-    @Query(value = "SELECT p FROM Post p " +
+    @Query(value = "SELECT COUNT(p.id) FROM Post p " +
             "WHERE p.isActive = true " +
             "AND p.moderationStatus = :moderationStatus " +
             "AND p.user.id = :userId")
@@ -89,7 +89,7 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Integer
     int countAllModeratePosts(
             @Param("moderationStatus") ModerationStatus moderationStatus);
 
-    @Query(value = "SELECT p FROM Post p " +
+    @Query(value = "SELECT COUNT(p.id) FROM Post p " +
             "WHERE p.isActive = true " +
             "AND p.moderationStatus = :moderationStatus " +
             "AND p.moderatorId = :moderatorId " +
@@ -119,21 +119,16 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Integer
             "FROM posts", nativeQuery = true)
     int countViews();
 
-    @Query(value = "SELECT p.time FROM Post p " +
-            "WHERE p.isActive = true " +
-            "AND p.moderationStatus = :moderationStatus " +
-            "AND p.user.id = :userId")
-    LocalDateTime getMyFirsPublicationTime(
-            @Param("moderationStatus") ModerationStatus moderationStatus,
-            @Param("userId") Integer userId,
-            Pageable pageable);
+    @Query(value = "SELECT p.time FROM posts p " +
+            "WHERE p.is_active = 1 " +
+            "AND p.moderation_status = 'ACCEPTED' " +
+            "AND p.user_id = ?1", nativeQuery = true)
+    LocalDateTime getMyFirsPublicationTime(int userId, PageRequest pageRequest);
 
-    @Query(value = "SELECT p.time FROM Post p " +
-            "WHERE p.isActive = true " +
-            "AND p.moderationStatus = :moderationStatus")
-    LocalDateTime getFirsPublicationTime(
-            @Param("moderationStatus") ModerationStatus moderationStatus,
-            PageRequest pageRequest);
+    @Query(value = "SELECT p.time FROM posts p " +
+            "WHERE p.is_active = 1 " +
+            "AND p.moderation_status = 'ACCEPTED'", nativeQuery = true)
+    LocalDateTime getFirsPublicationTime(PageRequest pageRequest);
 
     @Query(value = "SELECT DISTINCT p FROM Post p " +
             "WHERE p.isActive = true " +
