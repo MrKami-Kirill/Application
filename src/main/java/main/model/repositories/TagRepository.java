@@ -1,36 +1,43 @@
 package main.model.repositories;
 
+import main.model.ModerationStatus;
 import main.model.entity.Tag;
 import main.model.entity.User;
+import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 public interface TagRepository extends JpaRepository<Tag, Integer> {
 
 
-    @Query(value = "SELECT DISTINCT t.*" +
-            "FROM tags t " +
-            "JOIN tag2post t2p ON t.id = t2p.tag_id " +
-            "JOIN posts p ON t2p.post_id = p.id " +
-            "WHERE p.is_active = 1 " +
-            "AND p.moderation_status = 'ACCEPTED' " +
-            "AND p.time < NOW() " +
-            "ORDER BY t.id DESC", nativeQuery = true)
-    List<Tag> getAllTags();
+    @Query(value = "SELECT DISTINCT t FROM Tag t " +
+            "JOIN TagToPost t2p ON t.id = t2p.idTag.id " +
+            "JOIN Post p ON t2p.idPost.id = p.id " +
+            "WHERE p.isActive = true " +
+            "AND p.moderationStatus = :moderationStatus " +
+            "AND p.time < :time " +
+            "ORDER BY t.id DESC")
+    Page<Tag> getAllTags(
+            @Param("moderationStatus") ModerationStatus moderationStatus,
+            @Param("time") LocalDateTime time);
 
-    @Query(value = "SELECT DISTINCT t.*" +
-            "FROM tags t " +
-            "JOIN tag2post t2p ON t.id = t2p.tag_id " +
-            "JOIN posts p ON t2p.post_id = p.id " +
-            "WHERE (t.name LIKE %?%) " +
-            "p.is_active = 1 " +
-            "AND p.moderation_status = 'ACCEPTED' " +
-            "AND p.time < NOW() " +
-            "ORDER BY t.id DESC", nativeQuery = true)
-    List<Tag> getAllTagsByQuery(String query);
+    @Query(value = "SELECT DISTINCT t FROM Tag t " +
+            "JOIN TagToPost t2p ON t.id = t2p.idTag.id " +
+            "JOIN Post p ON t2p.idPost.id = p.id " +
+            "WHERE t.name LIKE %:query%" +
+            "AND p.isActive = true " +
+            "AND p.moderationStatus = :moderationStatus " +
+            "AND p.time < :time " +
+            "ORDER BY t.id DESC")
+    Page<Tag> getAllTagsByQuery(
+            @Param("query") String query,
+            @Param("moderationStatus") ModerationStatus moderationStatus,
+            @Param("time") LocalDateTime time);
 
     @Query(value = "SELECT MAX(tag_count) " +
             "FROM (" +
@@ -43,11 +50,4 @@ public interface TagRepository extends JpaRepository<Tag, Integer> {
             "GROUP BY t2p.tag_id) " +
             "AS max_tag_count", nativeQuery = true)
     int getMaxTagCount();
-
-    @Query(value = "SELECT " +
-            "IF((SELECT COUNT(*) FROM users WHERE name = ?) > 0, TRUE, FALSE) " +
-            "FROM tags;", nativeQuery = true)
-    Integer isTagExist(String email);
-
-    Optional<User> findByName(String name);
 }

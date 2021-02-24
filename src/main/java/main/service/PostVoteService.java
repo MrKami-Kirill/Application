@@ -1,6 +1,7 @@
 package main.service;
 
 import lombok.extern.slf4j.Slf4j;
+import main.model.ModerationStatus;
 import main.model.entity.Post;
 import main.model.entity.PostVote;
 import main.model.entity.User;
@@ -18,25 +19,25 @@ public class PostVoteService {
     private PostVoteRepository postVoteRepository;
 
     public int countMyLikes(int userId) {
-        int likesCount = postVoteRepository.countMyLikes(userId);
+        int likesCount = postVoteRepository.countMyLikes(ModerationStatus.ACCEPTED, userId);
         log.info("Получено общее кол-во лайков (" + likesCount + ") для пользователя с ID: " + userId);
         return likesCount;
     }
 
     public int countMyDislikes(int userId) {
-        int dislikesCount = postVoteRepository.countMyDislikes(userId);
+        int dislikesCount = postVoteRepository.countMyDislikes(ModerationStatus.ACCEPTED, userId);
         log.info("Получено общее кол-во дислайков (" + dislikesCount + ") для пользователя с ID: " + userId);
         return dislikesCount;
     }
 
     public int countLikes() {
-        int likesCount = postVoteRepository.countLikes();
+        int likesCount = postVoteRepository.countLikes(ModerationStatus.ACCEPTED);
         log.info("Получено общее кол-во лайков (" + likesCount + ") на сайте");
         return likesCount;
     }
 
     public int countDislikes() {
-        int dislikesCount = postVoteRepository.countDislikes();
+        int dislikesCount = postVoteRepository.countDislikes(ModerationStatus.ACCEPTED);
         log.info("Получено общее кол-во дислайков (" + dislikesCount + ") на сайте");
         return dislikesCount;
     }

@@ -7,7 +7,7 @@ import main.model.entity.Post;
 import main.model.entity.PostComment;
 import main.model.entity.TagToPost;
 
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -30,7 +30,7 @@ public class FullPostResponse implements Response {
 
     public FullPostResponse(Post post) {
         this.id = post.getId();
-        this.timestamp = String.valueOf(post.getTime().atZone(ZoneOffset.UTC).toInstant().toEpochMilli() / 1000);
+        this.timestamp = String.valueOf(post.getTime().atZone(ZoneId.of("Europe/Moscow")).toInstant().toEpochMilli() / 1000);
         this.active = post.isActive();
         this.user = new PostUser(post.getUser().getId(), post.getUser().getName());
         this.title = post.getTitle();
@@ -42,7 +42,7 @@ public class FullPostResponse implements Response {
         this.tags = new LinkedList<>();
         for (PostComment postComment : post.getPostComments()) {
             int commentId = postComment.getId();
-            String commentTime = String.valueOf(postComment.getTime().atZone(ZoneOffset.UTC).toInstant().toEpochMilli() / 1000);
+            String commentTime = String.valueOf(postComment.getTime().atZone(ZoneId.of("Europe/Moscow")).toInstant().toEpochMilli() / 1000);
             String commentText = postComment.getText();
 
             int commentUserId = postComment.getUser().getId();

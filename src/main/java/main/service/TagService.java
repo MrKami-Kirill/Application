@@ -3,6 +3,7 @@ package main.service;
 import lombok.extern.slf4j.Slf4j;
 import main.api.response.Response;
 import main.api.response.TagResponse;
+import main.model.ModerationStatus;
 import main.model.entity.Post;
 import main.model.entity.Tag;
 import main.model.entity.TagToPost;
@@ -12,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -39,12 +41,12 @@ public class TagService {
     }
 
     public ResponseEntity<Response> getAllTags() {
-        List<Tag> tags = tagRepository.getAllTags();
+        List<Tag> tags = tagRepository.getAllTags(ModerationStatus.ACCEPTED, LocalDateTime.now()).getContent();
         return getResponseEntityByTags(tags);
     }
 
     private ResponseEntity<Response> getAllTagsByQuery(String query) {
-        List<Tag> tags = tagRepository.getAllTagsByQuery(query);
+        List<Tag> tags = tagRepository.getAllTagsByQuery(query, ModerationStatus.ACCEPTED, LocalDateTime.now()).getContent();
         return getResponseEntityByTags(tags);
     }
 

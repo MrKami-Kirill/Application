@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import main.model.entity.Post;
 import main.service.HtmlParserService;
 
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,7 +44,7 @@ public class PostsResponse implements Response {
 
         private PostResponse(Post post, int announceLength) {
             this.id = post.getId();
-            this.timestamp = String.valueOf(post.getTime().atZone(ZoneOffset.UTC).toInstant().toEpochMilli() / 1000);
+            this.timestamp = String.valueOf(post.getTime().atZone(ZoneId.of("Europe/Moscow")).toInstant().toEpochMilli() / 1000);
             this.user = new PostUser(post.getUser().getId(), post.getUser().getName());
             this.title = post.getTitle();
             String tempText = HtmlParserService.parseStringFromHtml(post.getText());

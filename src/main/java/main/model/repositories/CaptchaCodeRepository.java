@@ -4,6 +4,7 @@ import main.model.entity.CaptchaCode;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -13,15 +14,18 @@ public interface CaptchaCodeRepository extends JpaRepository<CaptchaCode, Intege
 
     @Modifying
     @Transactional
-    @Query(value = "DELETE FROM captcha_codes " +
-            "WHERE time < ?", nativeQuery = true)
-    void deleteExpiredCaptchaCodes(LocalDateTime time);
+    @Query(value = "DELETE FROM CaptchaCode cc " +
+            "WHERE cc.time < :time")
+    void deleteExpiredCaptchaCodes(
+            @Param("time") LocalDateTime time);
 
-    @Query(value = "SELECT * FROM captcha_codes " +
-            "WHERE time < ?", nativeQuery = true)
-    List<CaptchaCode> getExpiredCaptchaCodes(LocalDateTime time);
+    @Query(value = "SELECT cc FROM CaptchaCode cc " +
+            "WHERE cc.time < :time")
+    List<CaptchaCode> getExpiredCaptchaCodes(
+            @Param("time") LocalDateTime time);
 
-    @Query(value = "SELECT * FROM captcha_codes c" +
-            " WHERE c.secret_code = ?", nativeQuery = true)
-    CaptchaCode getCaptchaBySecretCode(String secretCode);
+    @Query(value = "SELECT cc FROM CaptchaCode cc " +
+            "WHERE cc.secretCode = :secretCode")
+    CaptchaCode getCaptchaBySecretCode(
+            @Param("secretCode") String secretCode);
 }

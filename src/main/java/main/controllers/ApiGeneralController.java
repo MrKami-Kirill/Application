@@ -2,7 +2,7 @@ package main.controllers;
 
 import lombok.extern.slf4j.Slf4j;
 import main.api.request.*;
-import main.api.response.InitResponse;
+import main.config.InitConfig;
 import main.api.response.Response;
 import main.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,9 +21,9 @@ import java.security.Principal;
 @Slf4j
 @ComponentScan("service")
 public class ApiGeneralController {
-    
+
     @Autowired
-    private InitResponse initResponse;
+    private InitConfig initConfig;
     @Autowired
     private GlobalSettingService globalSettingService;
     @Autowired
@@ -45,9 +45,15 @@ public class ApiGeneralController {
     }
 
     @GetMapping(value = "/init")
-    public InitResponse init() {
+    public InitConfig init() {
         log.info("Отправлен GET запрос на /api/init");
-        return initResponse;
+        return new InitConfig(
+                initConfig.getTitle(),
+                initConfig.getSubtitle(),
+                initConfig.getPhone(),
+                initConfig.getEmail(),
+                initConfig.getCopyright(),
+                initConfig.getCopyrightFrom());
     }
 
     @GetMapping(value = "/tag", params = {"query"})
@@ -120,7 +126,7 @@ public class ApiGeneralController {
 
     @GetMapping(value = "/statistics/my")
     @PreAuthorize("hasAuthority('user:write')")
-    public ResponseEntity<Response> getMyStatistics(HttpServletRequest request) throws Exception {
+    public ResponseEntity<Response> getMyStatistics(HttpServletRequest request) {
         return postService.getMyStatistics(request.getSession());
     }
 
