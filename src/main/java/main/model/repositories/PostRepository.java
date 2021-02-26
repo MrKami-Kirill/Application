@@ -179,7 +179,7 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Integer
     @Query(value = "SELECT p FROM Post p " +
             "LEFT JOIN TagToPost t2p ON p.id = t2p.idPost.id " +
             "LEFT JOIN Tag t ON t2p.idTag.id = t.id " +
-            "WHERE t.name LIKE %:tag% " +
+            "WHERE t.name = :tag " +
             "AND p.isActive = true " +
             "AND p.moderationStatus = :moderationStatus " +
             "AND p.time < :time")

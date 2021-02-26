@@ -29,7 +29,7 @@ public interface TagRepository extends JpaRepository<Tag, Integer> {
     @Query(value = "SELECT DISTINCT t FROM Tag t " +
             "JOIN TagToPost t2p ON t.id = t2p.idTag.id " +
             "JOIN Post p ON t2p.idPost.id = p.id " +
-            "WHERE t.name = :query " +
+            "WHERE t.name LIKE %:query% " +
             "AND p.isActive = true " +
             "AND p.moderationStatus = :moderationStatus " +
             "AND p.time < :time " +
