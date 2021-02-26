@@ -21,8 +21,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpSession;
 import java.sql.Date;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 
@@ -159,12 +161,14 @@ public class PostService {
 
     public ResponseEntity<Response> getAllPostsByDate(String date, Integer offset, Integer limit) {
 
-        int count = postRepository.countAllPostsByDate(date);
+        int count = postRepository.countAllPostsByDate(date, ModerationStatus.ACCEPTED, LocalDateTime.now());
         log.info("Получено общее кол-во постов на сайте (" + count + ") за дату '" + date + "'");
         List<Post> posts = postRepository.getAllPostsByDate(
                 date,
+                ModerationStatus.ACCEPTED,
+                LocalDateTime.now(),
                 PageRequest.of(offset/limit, limit, Sort.by("time").descending())
-                );
+                ).getContent();
         log.info("Получен список постов за '" + date + "' для отображения: " + Arrays.toString(posts.toArray()));
         ResponseEntity<Response> response = new ResponseEntity<>(new PostsResponse(count, posts, announceLength), HttpStatus.OK);
         log.info("Направляется ответ на запрос /api/post/byDate cо следующими параметрами: {" + "HttpStatus:" + response.getStatusCode() + "," + response.getBody() + "}");
@@ -518,11 +522,11 @@ public class PostService {
         log.info("Получено общее кол-во постов (" + postsCount + ") для пользователя с ID: " + userId);
         int likesCount = postVoteService.countMyLikes(userId);
         int dislikesCount = postVoteService.countMyDislikes(userId);
-        int viewsCount = postRepository.countMyViews(userId);
+        int viewsCount = postRepository.countMyViews(userId, ModerationStatus.ACCEPTED);
         log.info("Получено общее кол-во просмотров (" + viewsCount + ") для пользователя с ID: " + userId);
         String firstPublication = "";
-        if (postRepository.isPostsExistByUserId(userId) > 0) {
-            LocalDateTime fistPublicationTime = postRepository.getMyFirsPublicationTime(userId, PageRequest.of(0, 1, Sort.by("time").ascending()));
+        if (postRepository.isPostsExistByUserId(userId, ModerationStatus.ACCEPTED)) {
+            LocalDateTime fistPublicationTime = postRepository.getMyFirsPublicationTime(userId, ModerationStatus.ACCEPTED);
             log.info("Получено время первой публикации (" + fistPublicationTime + ") для пользователя с ID: " + userId);
             firstPublication = parseTimeToStringFormat(fistPublicationTime);
         }
@@ -543,9 +547,9 @@ public class PostService {
         log.info("Получено общее кол-во постов (" + postsCount + ") на сайте");
         int likesCount = postVoteService.countLikes();
         int dislikesCount = postVoteService.countDislikes();
-        int viewsCount = postRepository.countViews();
+        int viewsCount = postRepository.countViews(ModerationStatus.ACCEPTED);
         log.info("Получено общее кол-во просмотров (" + viewsCount + ") на сайте");
-        LocalDateTime fistPublicationTime = postRepository.getFirsPublicationTime(PageRequest.of(0, 1, Sort.by("time").ascending()));
+        LocalDateTime fistPublicationTime = postRepository.getFirsPublicationTime(ModerationStatus.ACCEPTED);
         log.info("Получено время первой публикации (" + fistPublicationTime + ") на сайте ");
         String firstPublication = parseTimeToStringFormat(fistPublicationTime);
         ResponseEntity<Response> response = new ResponseEntity<>(new StatisticsResponse(postsCount, likesCount, dislikesCount, viewsCount, firstPublication), HttpStatus.OK);

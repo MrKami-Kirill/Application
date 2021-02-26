@@ -3,7 +3,6 @@ package main.model.repositories;
 import main.model.ModerationStatus;
 import main.model.entity.Post;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -21,7 +20,8 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Integer
             @Param("moderationStatus") ModerationStatus moderationStatus);
 
     @Query(value = "SELECT COUNT(p.id) FROM Post p " +
-            "WHERE p.moderationStatus = :moderationStatus " +
+            "WHERE p.isActive = true " +
+            "AND p.moderationStatus = :moderationStatus " +
             "AND p.time < :time")
     int countAllPosts(
             @Param("moderationStatus") ModerationStatus moderationStatus,
@@ -49,13 +49,15 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Integer
             @Param("moderationStatus") ModerationStatus moderationStatus,
             @Param("time") LocalDateTime time);
 
-    @Query(value = "SELECT COUNT(posts.id) FROM " +
-            "(SELECT * FROM posts p " +
-            "WHERE DATE(p.time) = ? " +
-            "AND p.is_active = 1 " +
-            "AND p.moderation_status = 'ACCEPTED' " +
-            "AND p.time < NOW()) AS posts", nativeQuery = true)
-    int countAllPostsByDate(String date);
+    @Query(value = "SELECT COUNT(p.id) FROM Post p " +
+            "WHERE FUNCTION('DATE_FORMAT', p.time, '%Y-%m-%d') = :date " +
+            "AND p.isActive = true " +
+            "AND p.moderationStatus = :moderationStatus " +
+            "AND p.time < :time")
+    int countAllPostsByDate(
+            @Param("date") String date,
+            @Param("moderationStatus") ModerationStatus moderationStatus,
+            @Param("time") LocalDateTime time);
 
     @Query(value = "SELECT COUNT(p.id) FROM Post p " +
             "LEFT JOIN TagToPost t2p ON p.id = t2p.idPost.id " +
@@ -106,29 +108,44 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Integer
             @Param("moderationStatus") ModerationStatus moderationStatus,
             @Param("userId") Integer userId);
 
-    @Query(value = "SELECT DISTINCT IF((SELECT SUM(view_count) FROM posts " +
-            "WHERE is_active = 1 " +
-            "AND moderation_status = 'ACCEPTED' " +
-            "AND user_id = ?1) IS NOT NULL, (SELECT SUM(view_count) FROM posts WHERE is_active = 1 AND moderation_status = 'ACCEPTED' AND user_id = ?1), 0) " +
-            "FROM posts", nativeQuery = true)
-    int countMyViews(int userId);
+    @Query(value = "SELECT CASE WHEN((SELECT SUM(viewCount) FROM Post " +
+            "WHERE isActive = true " +
+            "AND moderationStatus = :moderationStatus " +
+            "AND user.id = :userId) IS NOT NULL) " +
+            "THEN (SELECT SUM(p.viewCount) FROM Post p " +
+            "WHERE p.isActive = true " +
+            "AND p.moderationStatus = :moderationStatus " +
+            "AND p.user.id = :userId) " +
+            "ELSE 0 END " +
+            "FROM User")
+    int countMyViews(
+            @Param("userId") int userId,
+            @Param("moderationStatus") ModerationStatus moderationStatus);
 
-    @Query(value = "SELECT DISTINCT IF((SELECT SUM(view_count) FROM posts " +
-            "WHERE is_active = 1 " +
-            "AND moderation_status = 'ACCEPTED') IS NOT NULL, (SELECT SUM(view_count) FROM posts WHERE is_active = 1 AND moderation_status = 'ACCEPTED'), 0) " +
-            "FROM posts", nativeQuery = true)
-    int countViews();
+    @Query(value = "SELECT CASE WHEN((SELECT SUM(viewCount) FROM Post " +
+            "WHERE isActive = true " +
+            "AND moderationStatus = :moderationStatus) IS NOT NULL) " +
+            "THEN (SELECT SUM(p.viewCount) FROM Post p " +
+            "WHERE p.isActive = true " +
+            "AND p.moderationStatus = :moderationStatus) " +
+            "ELSE 0 END " +
+            "FROM User")
+    int countViews(
+            @Param("moderationStatus") ModerationStatus moderationStatus);
 
-    @Query(value = "SELECT p.time FROM posts p " +
-            "WHERE p.is_active = 1 " +
-            "AND p.moderation_status = 'ACCEPTED' " +
-            "AND p.user_id = ?1", nativeQuery = true)
-    LocalDateTime getMyFirsPublicationTime(int userId, PageRequest pageRequest);
+    @Query(value = "SELECT MIN(p.time) FROM Post p " +
+            "WHERE p.isActive = true " +
+            "AND p.moderationStatus = :moderationStatus " +
+            "AND p.user.id = :userId")
+    LocalDateTime getMyFirsPublicationTime(
+            @Param("userId") int userId,
+            @Param("moderationStatus") ModerationStatus moderationStatus);
 
-    @Query(value = "SELECT p.time FROM posts p " +
-            "WHERE p.is_active = 1 " +
-            "AND p.moderation_status = 'ACCEPTED'", nativeQuery = true)
-    LocalDateTime getFirsPublicationTime(PageRequest pageRequest);
+    @Query(value = "SELECT MIN(p.time) FROM Post p " +
+            "WHERE p.isActive = true " +
+            "AND p.moderationStatus = :moderationStatus")
+    LocalDateTime getFirsPublicationTime(
+            @Param("moderationStatus") ModerationStatus moderationStatus);
 
     @Query(value = "SELECT DISTINCT p FROM Post p " +
             "WHERE p.isActive = true " +
@@ -160,21 +177,25 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Integer
             @Param("time") LocalDateTime time,
             Pageable pageable);
 
-    @Query(value = "SELECT * FROM posts p  " +
-            "WHERE YEAR(p.time) = ?", nativeQuery = true)
-    List<Post> getPostsByYear(int year);
+    @Query(value = "SELECT DISTINCT p FROM Post p " +
+            "WHERE FUNCTION('YEAR', p.time) = :year")
+    List<Post> getPostsByYear(
+            @Param("year") int year);
 
-    @Query(value = "SELECT DISTINCT YEAR(p.time) AS post_year " +
-            "FROM posts p ORDER BY post_year DESC", nativeQuery = true)
+    @Query(value = "SELECT DISTINCT FUNCTION('YEAR', p.time) FROM Post p " +
+            "ORDER BY FUNCTION('YEAR', p.time) DESC")
     List<Integer> getYearsWithAnyPosts();
 
-
-    @Query(value = "SELECT * FROM posts p " +
-            "WHERE DATE(p.time) = ?1 " +
-            "AND p.is_active = 1 " +
-            "AND p.moderation_status = 'ACCEPTED' " +
-            "AND p.time < NOW()", nativeQuery = true)
-    List<Post> getAllPostsByDate(String date, Pageable pa);
+    @Query(value = "SELECT p FROM Post p " +
+            "WHERE FUNCTION('DATE_FORMAT', p.time, '%Y-%m-%d') = :date " +
+            "AND p.isActive = true " +
+            "AND p.moderationStatus = :moderationStatus " +
+            "AND p.time < :time")
+    Page<Post> getAllPostsByDate(
+            @Param("date") String date,
+            @Param("moderationStatus") ModerationStatus moderationStatus,
+            @Param("time") LocalDateTime time,
+            Pageable pa);
 
     @Query(value = "SELECT p FROM Post p " +
             "LEFT JOIN TagToPost t2p ON p.id = t2p.idPost.id " +
@@ -224,8 +245,14 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Integer
             Pageable pageable);
 
     @Query(value = "SELECT " +
-            "IF((SELECT COUNT(*) FROM posts WHERE is_active = 1 AND moderation_status = 'ACCEPTED' AND user_id = ?) > 0, TRUE, FALSE) " +
-            "FROM posts;", nativeQuery = true)
-    Integer isPostsExistByUserId(int userId);
+            "CASE WHEN ((SELECT COUNT(id) FROM Post " +
+            "WHERE isActive = true " +
+            "AND moderationStatus = :moderationStatus " +
+            "AND user.id = :userId) > 0) THEN TRUE " +
+            "ELSE FALSE END " +
+            "FROM Post")
+    boolean isPostsExistByUserId(
+            @Param("userId") int userId,
+            @Param("moderationStatus") ModerationStatus moderationStatus);
 
 }

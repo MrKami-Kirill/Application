@@ -9,15 +9,14 @@ import main.model.entity.Tag;
 import main.model.entity.TagToPost;
 import main.model.repositories.TagRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -53,8 +52,8 @@ public class TagService {
     private ResponseEntity<Response> getResponseEntityByTags(List<Tag> tags) {
         HashMap<String, Double> responseMap = new HashMap<>();
         if (!tags.isEmpty()) {
-            Integer maxTagCount = tagRepository.getMaxTagCount();
-            log.info("Получен вес (" + maxTagCount + ") для самого популярного тега на сайте");
+            Integer maxTagCount = Collections.max(tagRepository.getMaxTagCount(ModerationStatus.ACCEPTED, LocalDateTime.now()));
+            log.info("Получен кол-во публикация (" + maxTagCount + ") для самого популярного тега на сайте");
             Integer countAllPosts = postService.countAllPosts();
             log.info("Получено общее кол-во публикаций на сайте (" + countAllPosts + ")");
             Double k = 1 / ((double) maxTagCount / (double) countAllPosts);

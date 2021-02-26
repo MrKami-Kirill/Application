@@ -115,7 +115,7 @@ public class UserService implements UserDetailsService {
         String captcha = registerRequest.getCaptcha();
         String captchaSecret = registerRequest.getCaptchaSecret();
 
-        boolean isEmailExist = userRepository.isUserExistByEmail(email.toLowerCase()) > 0;
+        boolean isEmailExist = userRepository.isUserExistByEmail(email.toLowerCase());
         boolean isNameValid = isStringParamValid(name);
         boolean isPasswordLengthValid = password.length() >= userPasswordLength;
         boolean isCaptchaValid = captchaCodeService.isCaptchaValid(captcha, captchaSecret);
@@ -197,7 +197,7 @@ public class UserService implements UserDetailsService {
         String password = profileRequest.getPassword();
         Integer remotePhoto = profileRequest.getRemovePhoto();
 
-        boolean isEmailExist = userRepository.isUserExistByEmail(email.toLowerCase()) > 0;
+        boolean isEmailExist = userRepository.isUserExistByEmail(email.toLowerCase());
         boolean isEmailValid = isEmailExist && user.getEmail().equalsIgnoreCase(email);
         boolean isNameValid = isStringParamValid(name);
         boolean isPasswordLengthValid;
@@ -272,7 +272,7 @@ public class UserService implements UserDetailsService {
     public ResponseEntity<Response> restorePassword(RestorePasswordRequest passwordRequest) {
         String email = passwordRequest.getEmail();
         User user;
-        if (userRepository.isUserExistByEmail(email) > 0) {
+        if (userRepository.isUserExistByEmail(email)) {
             user = getUserByEmail(email);
         } else {
             log.warn("Пользователь с email '" + email + "' не найден");
