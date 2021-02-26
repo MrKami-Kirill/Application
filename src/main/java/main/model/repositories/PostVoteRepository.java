@@ -15,36 +15,32 @@ public interface PostVoteRepository extends JpaRepository<PostVote, Integer> {
     @Query(value = "SELECT COUNT(pv.id) FROM PostVote pv " +
             "LEFT JOIN Post p ON pv.post.id = p.id " +
             "WHERE p.isActive = true " +
-            "AND p.moderationStatus = :moderationStatus " +
+            "AND p.moderationStatus = 'ACCEPTED' " +
             "AND pv.user.id = :userId " +
             "AND pv.value = 1")
-    int countMyLikes(
-            @Param("moderationStatus") ModerationStatus moderationStatus,
-            @Param("userId") Integer userId);
+    int countMyLikes(@Param("userId") Integer userId);
 
     @Query(value = "SELECT COUNT(pv.id) FROM PostVote pv " +
             "LEFT JOIN Post p ON pv.post.id = p.id " +
             "WHERE p.isActive = true " +
-            "AND p.moderationStatus = :moderationStatus " +
+            "AND p.moderationStatus = 'ACCEPTED' " +
             "AND pv.user.id = :userId " +
             "AND pv.value = -1")
-    int countMyDislikes(
-            @Param("moderationStatus") ModerationStatus moderationStatus,
-            @Param("userId") Integer userId);
+    int countMyDislikes(@Param("userId") Integer userId);
 
     @Query(value = "SELECT COUNT(pv.id) FROM PostVote pv " +
             "LEFT JOIN Post p ON pv.post.id = p.id " +
             "WHERE p.isActive = true " +
-            "AND p.moderationStatus = :moderationStatus " +
+            "AND p.moderationStatus = 'ACCEPTED' " +
             "AND pv.value = 1")
-    int countLikes(@Param("moderationStatus") ModerationStatus moderationStatus);
+    int countLikes();
 
     @Query(value = "SELECT COUNT(pv.id) FROM PostVote pv " +
             "LEFT JOIN Post p ON pv.post.id = p.id " +
             "WHERE p.isActive = true " +
-            "AND p.moderationStatus = :moderationStatus " +
+            "AND p.moderationStatus = 'ACCEPTED' " +
             "AND pv.value = -1")
-    int countDislikes(@Param("moderationStatus") ModerationStatus moderationStatus);
+    int countDislikes();
 
     Optional<PostVote> findByUserAndPostAndValue(User user, Post post, byte value);
 

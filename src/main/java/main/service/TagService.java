@@ -3,19 +3,15 @@ package main.service;
 import lombok.extern.slf4j.Slf4j;
 import main.api.response.Response;
 import main.api.response.TagResponse;
-import main.model.ModerationStatus;
 import main.model.entity.Post;
 import main.model.entity.Tag;
 import main.model.entity.TagToPost;
 import main.model.repositories.TagRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -40,19 +36,19 @@ public class TagService {
     }
 
     public ResponseEntity<Response> getAllTags() {
-        List<Tag> tags = tagRepository.getAllTags(ModerationStatus.ACCEPTED, LocalDateTime.now());
+        List<Tag> tags = tagRepository.getAllTags();
         return getResponseEntityByTags(tags);
     }
 
     private ResponseEntity<Response> getAllTagsByQuery(String query) {
-        List<Tag> tags = tagRepository.getAllTagsByQuery(query, ModerationStatus.ACCEPTED, LocalDateTime.now());
+        List<Tag> tags = tagRepository.getAllTagsByQuery(query);
         return getResponseEntityByTags(tags);
     }
 
     private ResponseEntity<Response> getResponseEntityByTags(List<Tag> tags) {
         HashMap<String, Double> responseMap = new HashMap<>();
         if (!tags.isEmpty()) {
-            Integer maxTagCount = Collections.max(tagRepository.getMaxTagCount(ModerationStatus.ACCEPTED, LocalDateTime.now()));
+            Integer maxTagCount = Collections.max(tagRepository.getMaxTagCount());
             log.info("Получен кол-во публикация (" + maxTagCount + ") для самого популярного тега на сайте");
             Integer countAllPosts = postService.countAllPosts();
             log.info("Получено общее кол-во публикаций на сайте (" + countAllPosts + ")");
