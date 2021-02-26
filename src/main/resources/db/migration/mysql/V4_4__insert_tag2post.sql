@@ -21,7 +21,7 @@ insert into tag2post(post_id, tag_id)
 insert into tag2post(post_id, tag_id)
     values ((SELECT id FROM posts WHERE title = 'Female Perspective of Computer Science'), (SELECT id FROM tags WHERE name = 'Java'));
 insert into tag2post(post_id, tag_id)
-    values ((SELECT id FROM posts WHERE title = 'Female Perspective of Computer Science'), (SELECT id FROM tags WHERE name = 'C++'));
+    values ((SELECT id FROM posts WHERE title = 'Female Perspective of Computer Science'), (SELECT id FROM tags WHERE name = 'C'));
 insert into tag2post(post_id, tag_id)
     values ((SELECT id FROM posts WHERE title = 'Female Perspective of Computer Science'), (SELECT id FROM tags WHERE name = 'CS2'));
 insert into tag2post(post_id, tag_id)
@@ -77,4 +77,4 @@ insert into tag2post(post_id, tag_id)
 insert into tag2post(post_id, tag_id)
     values ((SELECT id FROM posts WHERE title = 'Rob Miles’ Journal'), (SELECT id FROM tags WHERE name = 'Game development'));
 insert into tag2post(post_id, tag_id)
-    values ((SELECT id FROM posts WHERE title = 'Rob Miles’ Journal'), (SELECT id FROM tags WHERE name = 'C#'));
+    values ((SELECT id FROM posts WHERE title = 'Rob Miles’ Journal'), (SELECT id FROM tags WHERE name = 'C'));
