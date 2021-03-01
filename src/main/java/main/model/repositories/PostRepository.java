@@ -60,7 +60,7 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Integer
             @Param("tag") String tag);
 
     @Query(value = "SELECT COUNT(p.id) FROM Post p " +
-            "WHERE p.isActive = true " +
+            "WHERE p.isActive = false " +
             "AND p.user.id = :userId")
     int countMyInActivePosts(
             @Param("userId") Integer userId);
@@ -96,7 +96,7 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Integer
 
     @Query(value = "SELECT CASE WHEN((SELECT SUM(viewCount) FROM Post " +
             "WHERE isActive = true " +
-            "AND moderationStatus = :moderationStatus " +
+            "AND moderationStatus = 'ACCEPTED' " +
             "AND user.id = :userId) IS NOT NULL) " +
             "THEN (SELECT SUM(p.viewCount) FROM Post p " +
             "WHERE p.isActive = true " +
@@ -109,7 +109,7 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Integer
 
     @Query(value = "SELECT CASE WHEN((SELECT SUM(viewCount) FROM Post " +
             "WHERE isActive = true " +
-            "AND moderationStatus = :moderationStatus) IS NOT NULL) " +
+            "AND moderationStatus = 'ACCEPTED') IS NOT NULL) " +
             "THEN (SELECT SUM(p.viewCount) FROM Post p " +
             "WHERE p.isActive = true " +
             "AND p.moderationStatus = 'ACCEPTED') " +
@@ -136,13 +136,25 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Integer
     Page<Post> getPostsByMode(
             Pageable pageable);
 
-    @Query(value = "SELECT DISTINCT p FROM Post p " +
-            "LEFT JOIN PostComment pc ON p.id = pc.post.id " +
-            "WHERE p.isActive = true " +
-            "AND p.moderationStatus = 'ACCEPTED' " +
-            "AND p.time < CURRENT_TIMESTAMP")
-    Page<Post> getPopularPosts(
-            Pageable pageable);
+    @Query(value = "SELECT * FROM posts AS p " +
+            "LEFT JOIN (SELECT post_id, SUM(value) AS sum_values " +
+            "FROM post_votes GROUP BY post_id) AS sum_votes " +
+            "ON p.id = sum_votes.post_id " +
+            "WHERE p.is_active = 1 " +
+            "AND p.moderation_status = 'ACCEPTED' " +
+            "AND p.time < NOW() " +
+            "ORDER BY sum_values DESC", nativeQuery = true)
+    Page<Post> getBestPosts(Pageable pageable);
+
+    @Query(value = "SELECT * FROM posts AS p " +
+            "LEFT JOIN (SELECT post_id, COUNT(post_id) AS post_count " +
+            "FROM post_comments GROUP BY post_id) AS post_comments_count " +
+            "ON p.id = post_comments_count.post_id " +
+            "WHERE p.is_active = 1 " +
+            "AND p.moderation_status = 'ACCEPTED' " +
+            "AND p.time < NOW() " +
+            "ORDER BY post_count DESC", nativeQuery = true)
+    Page<Post> getPopularPosts(Pageable pageable);
 
     @Query(value = "SELECT DISTINCT p FROM Post p " +
             "WHERE p.text LIKE %:query% OR p.title LIKE %:query% " +
@@ -154,11 +166,17 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Integer
             Pageable pageable);
 
     @Query(value = "SELECT DISTINCT p FROM Post p " +
-            "WHERE FUNCTION('YEAR', p.time) = :year")
+            "WHERE FUNCTION('YEAR', p.time) = :year " +
+            "AND p.isActive = true " +
+            "AND p.moderationStatus = 'ACCEPTED' " +
+            "AND p.time < CURRENT_TIMESTAMP")
     List<Post> getPostsByYear(
             @Param("year") int year);
 
     @Query(value = "SELECT DISTINCT FUNCTION('YEAR', p.time) FROM Post p " +
+            "WHERE p.isActive = true " +
+            "AND p.moderationStatus = 'ACCEPTED' " +
+            "AND p.time < CURRENT_TIMESTAMP " +
             "ORDER BY FUNCTION('YEAR', p.time) DESC")
     List<Integer> getYearsWithAnyPosts();
 
@@ -184,7 +202,7 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Integer
 
 
     @Query(value = "SELECT p FROM Post p " +
-            "WHERE p.isActive = true " +
+            "WHERE p.isActive = false " +
             "AND p.user.id = :userId")
     Page<Post> getMyInActivePosts(
             @Param("userId") Integer userId,

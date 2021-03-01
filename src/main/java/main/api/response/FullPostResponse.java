@@ -8,8 +8,10 @@ import main.model.entity.PostComment;
 import main.model.entity.TagToPost;
 
 import java.time.ZoneId;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
@@ -40,7 +42,7 @@ public class FullPostResponse implements Response {
         this.viewCount = post.getViewCount();
         this.comments = new LinkedList<>();
         this.tags = new LinkedList<>();
-        for (PostComment postComment : post.getPostComments()) {
+        for (PostComment postComment : post.getPostComments().stream().sorted(new CommentComparator()).collect(Collectors.toList())) {
             int commentId = postComment.getId();
             String commentTime = String.valueOf(postComment.getTime().atZone(ZoneId.of("Europe/Moscow")).toInstant().toEpochMilli() / 1000);
             String commentText = postComment.getText();
@@ -89,6 +91,14 @@ public class FullPostResponse implements Response {
             private int id;
             private String name;
             private String photo;
+        }
+    }
+
+    static class CommentComparator implements Comparator<PostComment> {
+
+        @Override
+        public int compare(PostComment o1, PostComment o2) {
+            return o1.getTime().compareTo(o2.getTime());
         }
     }
 

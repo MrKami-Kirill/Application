@@ -78,11 +78,11 @@ public class PostService {
                 log.info("Получен список новых постов для отображения: " + Arrays.toString(posts.toArray()));
                 break;
             case ("popular"):
-                posts = postRepository.getPopularPosts(PageRequest.of(offset/limit, limit, Sort.by("time").descending())).getContent();
+                posts = postRepository.getPopularPosts(PageRequest.of(offset/limit, limit)).getContent();
                 log.info("Получен список популярных постов для отображения: " + Arrays.toString(posts.toArray()));
                 break;
             case ("best"):
-                posts = postRepository.getPostsByMode(PageRequest.of(offset/limit, limit, Sort.by("viewCount").descending())).getContent();
+                posts = postRepository.getBestPosts(PageRequest.of(offset/limit, limit)).getContent();
                 log.info("Получен список самых обсуждаемых постов для отображения: " + Arrays.toString(posts.toArray()));
                 break;
             case ("early"):
