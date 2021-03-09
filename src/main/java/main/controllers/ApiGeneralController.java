@@ -1,9 +1,9 @@
 package main.controllers;
 
 import lombok.extern.slf4j.Slf4j;
-import main.api.request.*;
+import main.model.dto.request.*;
 import main.config.InitConfig;
-import main.api.response.Response;
+import main.model.dto.response.Response;
 import main.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;

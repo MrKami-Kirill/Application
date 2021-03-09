@@ -76,7 +76,7 @@ Caused by: java.lang.NoClassDefFoundError: main/api/request/RegisterRequest
 	at java.base/java.lang.Class.getDeclaredMethods(Class.java:2387)
 	at org.springframework.util.ReflectionUtils.getDeclaredMethods(ReflectionUtils.java:463)
 	... 33 common frames omitted
-Caused by: java.lang.ClassNotFoundException: main.api.request.RegisterRequest
+Caused by: java.lang.ClassNotFoundException: main.model.dto.request.RegisterRequest
 	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:602)
 	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:178)
 	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:522)

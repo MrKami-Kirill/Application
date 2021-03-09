@@ -2,11 +2,11 @@ package main.controllers;
 
 
 import lombok.extern.slf4j.Slf4j;
-import main.api.request.ChangePasswordRequest;
-import main.api.request.LoginRequest;
-import main.api.request.RegisterRequest;
-import main.api.request.RestorePasswordRequest;
-import main.api.response.Response;
+import main.model.dto.request.ChangePasswordRequest;
+import main.model.dto.request.LoginRequest;
+import main.model.dto.request.RegisterRequest;
+import main.model.dto.request.RestorePasswordRequest;
+import main.model.dto.response.Response;
 import main.service.CaptchaCodeService;
 import main.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;

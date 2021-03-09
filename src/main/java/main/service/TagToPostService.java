@@ -4,7 +4,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import main.model.entity.Post;
 import main.model.entity.TagToPost;
-import main.model.repositories.TagToPostRepository;
+import main.repositories.TagToPostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

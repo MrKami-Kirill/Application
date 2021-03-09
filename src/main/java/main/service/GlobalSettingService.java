@@ -2,12 +2,12 @@ package main.service;
 
 
 import lombok.extern.slf4j.Slf4j;
-import main.api.request.GlobalSettingRequest;
-import main.api.response.GlobalSettingResponse;
-import main.api.response.Response;
+import main.model.dto.request.GlobalSettingRequest;
+import main.model.dto.response.GlobalSettingResponse;
+import main.model.dto.response.Response;
 import main.model.entity.GlobalSetting;
 import main.model.entity.User;
-import main.model.repositories.GlobalSettingRepository;
+import main.repositories.GlobalSettingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

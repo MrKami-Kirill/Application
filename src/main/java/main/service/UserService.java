@@ -1,11 +1,11 @@
 package main.service;
 
 import lombok.extern.slf4j.Slf4j;
-import main.api.request.*;
-import main.api.response.*;
+import main.model.dto.request.*;
+import main.model.dto.response.*;
 import main.model.entity.User;
-import main.model.repositories.UserRepository;
-import main.security.SecurityUser;
+import main.repositories.UserRepository;
+import main.model.security.SecurityUser;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

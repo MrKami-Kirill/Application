@@ -1,12 +1,12 @@
 package main.service;
 
 import lombok.extern.slf4j.Slf4j;
-import main.api.response.Response;
-import main.api.response.TagResponse;
+import main.model.dto.response.Response;
+import main.model.dto.response.TagResponse;
 import main.model.entity.Post;
 import main.model.entity.Tag;
 import main.model.entity.TagToPost;
-import main.model.repositories.TagRepository;
+import main.repositories.TagRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

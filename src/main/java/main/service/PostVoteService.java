@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import main.model.entity.Post;
 import main.model.entity.PostVote;
 import main.model.entity.User;
-import main.model.repositories.PostVoteRepository;
+import main.repositories.PostVoteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

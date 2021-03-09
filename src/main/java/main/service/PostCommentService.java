@@ -1,14 +1,14 @@
 package main.service;
 
 import lombok.extern.slf4j.Slf4j;
-import main.api.request.PostCommentRequest;
-import main.api.response.BadRequestMessageResponse;
-import main.api.response.PostCommentResponse;
-import main.api.response.Response;
+import main.model.dto.request.PostCommentRequest;
+import main.model.dto.response.BadRequestMessageResponse;
+import main.model.dto.response.PostCommentResponse;
+import main.model.dto.response.Response;
 import main.model.entity.Post;
 import main.model.entity.PostComment;
 import main.model.entity.User;
-import main.model.repositories.PostCommentRepository;
+import main.repositories.PostCommentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;

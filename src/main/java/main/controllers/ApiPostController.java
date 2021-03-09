@@ -1,9 +1,9 @@
 package main.controllers;
 
 import lombok.extern.slf4j.Slf4j;
-import main.api.request.PostRequest;
-import main.api.request.VoteRequest;
-import main.api.response.Response;
+import main.model.dto.request.PostRequest;
+import main.model.dto.request.VoteRequest;
+import main.model.dto.response.Response;
 import main.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
