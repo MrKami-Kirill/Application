@@ -169,15 +169,16 @@ public class PostService {
     public ResponseEntity<Response> getPostById(Integer postId, HttpSession session) throws Exception {
 
         Post post = postRepository.findById(postId).orElse(null);
-        if (!isPostExist(post)) {
+        if (!isPostExists(post)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
+
         log.info("Получен пост с ID=" + post.getId());
 
         User user = userService.getUserBySession(session);
         if (user == null || (post.getUser() != user && user.getIsModerator() == 0)) {
             if (!post.isActive() || (post.getModerationStatus() != ModerationStatus.ACCEPTED) || post.getTime().isAfter(LocalDateTime.now())) {
-                log.warn("Некорректный пост " + post.toString() + " для отображения пользователю");
+                log.warn("Некорректный пост " + post + " для отображения пользователю");
                 if (!post.isActive()) {
                     throw new Exception("Пост не активный");
                 }
@@ -191,7 +192,7 @@ public class PostService {
             int totalViewCount = post.getViewCount() + 1;
             post.setViewCount(totalViewCount);
             postRepository.save(post);
-            log.info("Кол-во просмотров поста с ID=" + postId.toString() + " увеличено на 1. Итоговое кол-во просмотров " + totalViewCount);
+            log.info("Кол-во просмотров поста с ID=" + postId + " увеличено на 1. Итоговое кол-во просмотров " + totalViewCount);
         }
 
         ResponseEntity<Response> response = new ResponseEntity<>(new FullPostResponse(post), HttpStatus.OK);
@@ -343,7 +344,7 @@ public class PostService {
         postRepository.save(post);
         log.info(moderationStatus == ModerationStatus.ACCEPTED ? "Опубликован новый пост с ID=" + post.getId() : "Создан неопубликованный пост с ID=" + post.getId());
 
-        if (!tags.isEmpty() && tags.size() > 0)  {
+        if (!tags.isEmpty())  {
             tagService.addNewTagsByPost(tags, post);
         }
         return new ResponseEntity<>(new BooleanResponse(true), HttpStatus.OK);
@@ -360,7 +361,7 @@ public class PostService {
         List<String> tags = postRequest.getTags();
         Post post = postRepository.findById(id).orElse(null);
 
-        if (!isPostExist(post)) {
+        if (!isPostExists(post)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
@@ -417,7 +418,7 @@ public class PostService {
                 "text: " + post.getText() + "}");
 
         tagToPostService.deleteTagToPostByPost(post);
-        if (!tags.isEmpty() && tags.size() > 0) {
+        if (!tags.isEmpty()) {
             tagService.addNewTagsByPost(tags, post);
         }
 
@@ -436,11 +437,11 @@ public class PostService {
         }
 
         Post post = postRepository.findById(postId).orElse(null);
-        if (!isPostExist(post)) {
+        if (!isPostExists(post)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
-        ResponseEntity<Response> response = new ResponseEntity<>(new BooleanResponse(true), HttpStatus.OK);;
+        ResponseEntity<Response> response = new ResponseEntity<>(new BooleanResponse(true), HttpStatus.OK);
 
         if (user.getIsModerator() == 1) {
             switch (decision) {
@@ -534,10 +535,10 @@ public class PostService {
         int postId = voteRequest.getPostId();
 
         Post post = postRepository.findById(postId).orElse(null);
-        if (!isPostExist(post)) {
+
+        if (!isPostExists(post)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
-
         User user = userService.getUserBySession(session);
         if (!isUserExist(user, session)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
@@ -555,10 +556,7 @@ public class PostService {
     }
 
     private boolean isPostTextValid(String text, int minLength) {
-        if (text == null || text.isBlank() || text.equals("") || text.length() < minLength) {
-            return false;
-        }
-        return true;
+        return text != null && !text.isBlank() && !text.equals("") && text.length() >= minLength;
     }
 
     private String parseTimeToStringFormat(LocalDateTime time) {
@@ -567,17 +565,13 @@ public class PostService {
 
     private boolean isPostTimeValid(String time) {
         LocalDateTime ldt = LocalDateTime.ofEpochSecond(Long.valueOf(time), 0, ZoneId.of("Europe/Moscow").getRules().getOffset(LocalDateTime.now()));
-        if (time == null ||
-                time.isBlank() ||
-                time.equals("") ||
-                ldt.isBefore(LocalDateTime.now())
-        ) {
-            return false;
-        }
-        return true;
+        return time != null &&
+                !time.isBlank() &&
+                !time.equals("") &&
+                !ldt.isBefore(LocalDateTime.now());
     }
 
-    private boolean isPostExist(Post post) {
+    private boolean isPostExists(Post post) {
         if (post == null) {
             log.warn("Ошибка! Пост с ID=" + post.getId() + " не найден");
             return false;

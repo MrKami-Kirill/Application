@@ -200,16 +200,16 @@ public class UserService implements UserDetailsService {
         boolean isEmailExist = userRepository.isUserExistByEmail(email.toLowerCase());
         boolean isEmailValid = isEmailExist && user.getEmail().equalsIgnoreCase(email);
         boolean isNameValid = isStringParamValid(name);
-        boolean isPasswordLengthValid;
+        boolean isPasswordLengthValid = true;
         boolean isPhotoValid = true;
 
-        if (isStringParamValid(password)) {
-            isPasswordLengthValid = password.length() >= userPasswordLength;
-            if (isPasswordLengthValid) {
-                user.setPassword(new BCryptPasswordEncoder(12).encode(password));
+        if (password != null) {
+            if (isStringParamValid(password)) {
+                isPasswordLengthValid = password.length() >= userPasswordLength;
+                if (isPasswordLengthValid) {
+                    user.setPassword(new BCryptPasswordEncoder(12).encode(password));
+                }
             }
-        } else {
-            isPasswordLengthValid = true;
         }
 
         String photoPath = "";
