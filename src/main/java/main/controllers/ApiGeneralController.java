@@ -1,6 +1,7 @@
 package main.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import main.model.dto.request.*;
 import main.config.InitConfig;
@@ -21,6 +22,7 @@ import java.security.Principal;
 @RequestMapping(value = "/api")
 @Slf4j
 @ComponentScan("service")
+@Tag(name = "Прочие API", description = "Обрабатывает прочие запросы")
 public class ApiGeneralController {
 
     @Autowired

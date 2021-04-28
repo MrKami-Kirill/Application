@@ -2,6 +2,7 @@ package main.controllers;
 
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import main.model.dto.request.ChangePasswordRequest;
 import main.model.dto.request.LoginRequest;
@@ -22,6 +23,7 @@ import java.security.Principal;
 @RequestMapping(value = "/api/auth")
 @Slf4j
 @ComponentScan("service")
+@Tag(name = "API для авторизации", description = "Обрабатывает все запросы /api/auth/*")
 public class ApiAuthController {
     
     @Autowired
