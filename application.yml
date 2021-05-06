@@ -60,7 +60,7 @@ post:
   text:
     min_length: 50
   image:
-    upload_dir: upload
+    upload_dir: src/main/resources/upload
     format: jpg
 
 captcha:
@@ -86,7 +86,7 @@ user:
         server_link: "http://localhost:"
     length: 6
   image:
-    avatar_dir: avatars
+    avatar_dir: src/main/resources/avatars
     format: jpg
     max_size: 10000000 # bytes (10Mb)
 
