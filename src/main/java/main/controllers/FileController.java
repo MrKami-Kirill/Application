@@ -24,7 +24,7 @@ public class FileController {
     @Autowired
     private FileService fileService;
 
-    @GetMapping(value="/**src/main/resources/upload/{firstFolder}/{secondFolder}/{thirdFolder}/{image}")
+    @GetMapping(value="/**/src/main/resources/upload/{firstFolder}/{secondFolder}/{thirdFolder}/{image}")
     public ResponseEntity<?> getPostImage(@PathVariable(value = "image") String image,
                                       @PathVariable(value = "firstFolder") String firstFolder,
                                       @PathVariable(value = "secondFolder") String secondFolder,
@@ -37,7 +37,7 @@ public class FileController {
         return fileService.getResponseWithImage(pathToFile);
     }
 
-    @GetMapping(value="/**src/main/resources/avatars/{firstFolder}/{secondFolder}/{thirdFolder}/{image}")
+    @GetMapping(value="/**/src/main/resources/avatars/{firstFolder}/{secondFolder}/{thirdFolder}/{image}")
     public ResponseEntity<?> getUserAvatar(@PathVariable(value = "image") String image,
                                       @PathVariable(value = "firstFolder") String firstFolder,
                                       @PathVariable(value = "secondFolder") String secondFolder,
